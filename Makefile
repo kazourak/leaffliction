@@ -5,6 +5,7 @@
 PROJECT_NAME = leaffliction
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python
+VENV_DIR = .venv
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -16,7 +17,7 @@ PYTHON_INTERPRETER = python
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-	
+
 
 
 
@@ -25,6 +26,7 @@ requirements:
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
+	rm -rf ./data/external/images
 
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
@@ -38,15 +40,20 @@ lint:
 format:
 	black --config pyproject.toml leaffliction
 
-
-
+## Download data from 42 intranet
+.PHONY: data
+data:
+	wget "https://cdn.intra.42.fr/document/document/17060/leaves.zip"
+	[ -d ./data/external ] || mkdir -p ./data/external
+	unzip leaves.zip -d ./data/external/
+	rm -rf leaves.zip
 
 ## Set up python interpreter environment
 .PHONY: create_environment
 create_environment:
-	@bash -c "if [ ! -z `which virtualenvwrapper.sh` ]; then source `which virtualenvwrapper.sh`; mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); else mkvirtualenv.bat $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); fi"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
-	
+	@$(PYTHON_INTERPRETER) -m venv .venv
+	@echo ">>> New virtualenv created. Activate with:source $(VENV_DIR)/bin/activate"
+
 
 
 
