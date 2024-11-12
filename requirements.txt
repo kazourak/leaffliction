@@ -1,4 +1,14 @@
-flake8==7.1.1
-mccabe==0.7.0
-pycodestyle==2.12.1
-pyflakes==3.2.0
+black
+flake8
+ipython
+isort
+jupyterlab
+matplotlib
+mkdocs
+notebook
+numpy
+pandas
+pip
+python-dotenv
+scikit-learn
+-e .
