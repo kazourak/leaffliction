@@ -5,6 +5,7 @@
 PROJECT_NAME = leaffliction
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python
+VENV_DIR = .venv
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -44,9 +45,9 @@ format:
 ## Set up python interpreter environment
 .PHONY: create_environment
 create_environment:
-	@bash -c "if [ ! -z `which virtualenvwrapper.sh` ]; then source `which virtualenvwrapper.sh`; mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); else mkvirtualenv.bat $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER); fi"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
-	
+	@$(PYTHON_INTERPRETER) -m venv .venv
+	@echo ">>> New virtualenv created. Activate with:source $(VENV_DIR)/bin/activate"
+
 
 
 
