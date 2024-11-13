@@ -1,7 +1,4 @@
-import pathlib
-
 import cv2
-import sys
 
 from leaffliction.augmentation.Augmentation import augment
 
