@@ -139,56 +139,7 @@ def _flip(image: np.ndarray, percentage: float) -> np.ndarray:
     return flip_transform(image=image)["image"]
 
 
-def visualize(image: np.ndarray) -> None:
-    """
-    Visualize the image.
-
-    Parameters
-    ----------
-    image : np.ndarray
-        The image to visualize.
-
-    Returns
-    -------
-    None
-    """
-    plt.figure(figsize=(10, 10))
-    plt.axis("off")
-    plt.imshow(image)
-    plt.show()
-
-
-def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
-    """
-    Augment the image.
-
-    Parameters
-    ----------
-    image : np.ndarray
-        The image to augment.
-    percentage : float
-        The probability with which the image will be augmented.
-
-    Returns
-    -------
-    list[np.ndarray]
-        The augmented images.
-    """
-    processed = {
-        "Crop": _crop,
-        "Rotate": _rotate,
-        "Erasing": _erasing,
-        "Blur": _blur,
-        "Contrast": _contrast,
-        "Flip": _flip,
-    }
-    return {
-        augmentation_name: processed[augmentation_name](image, percentage)
-        for augmentation_name in processed
-    }
-
-
-def visualize_all(original_image: np.ndarray, augmented_images: dict[str, np.ndarray]) -> None:
+def _visualize_all(original_image: np.ndarray, augmented_images: dict[str, np.ndarray]) -> None:
     """
     Visualize the original and augmented images.
 
@@ -222,6 +173,36 @@ def visualize_all(original_image: np.ndarray, augmented_images: dict[str, np.nda
     plt.show()
 
 
+def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
+    """
+    Augment the image.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to augment.
+    percentage : float
+        The probability with which the image will be augmented.
+
+    Returns
+    -------
+    list[np.ndarray]
+        The augmented images.
+    """
+    processed = {
+        "Crop": _crop,
+        "Rotate": _rotate,
+        "Erasing": _erasing,
+        "Blur": _blur,
+        "Contrast": _contrast,
+        "Flip": _flip,
+    }
+    return {
+        augmentation_name: processed[augmentation_name](image, percentage)
+        for augmentation_name in processed
+    }
+
+
 if __name__ == "__main__":
     # Get program argument
     args = sys.argv[1:]
@@ -245,7 +226,7 @@ if __name__ == "__main__":
     augmented_images = augment(image, 1)
 
     # Visualize all images
-    visualize_all(image, augmented_images)
+    _visualize_all(image, augmented_images)
 
     # Save augmented images
     for func_name, augmented_image in augmented_images.items():
