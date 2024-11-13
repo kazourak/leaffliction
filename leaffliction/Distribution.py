@@ -104,13 +104,18 @@ def _plot_plant_types(subfolders_sizes: dict, plant_types: list) -> None:
         if len(_folders_size) == 0:
             raise Exception(f">>> Error {plant_type} is empty.")
 
-        color_map = plt.cm.tab10  # You can try plt.cm.plasma for a warmer color palette
+        color_map = plt.cm.tab10
         colors = [color_map(i / (len(_folders_size) - 1)) for i in range(len(_folders_size))]
 
         _fig, _axes = plt.subplots(1, 2, figsize=(10, 5), constrained_layout=True)
         _fig.canvas.manager.set_window_title(f"{plant_type}")
 
-        _axes[0].pie(_folders_size.values(), labels=list(_folders_size.keys()), autopct="%1.0f%%", colors=colors)
+        _axes[0].pie(
+            _folders_size.values(),
+            labels=list(_folders_size.keys()),
+            autopct="%1.0f%%",
+            colors=colors,
+        )
         _axes[1].bar(
             list(_folders_size.keys()),
             _folders_size.values(),
