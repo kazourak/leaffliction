@@ -26,7 +26,7 @@ def _crop(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     height, width = image.shape[:2]
 
-    resizecrop_transform = A.RandomResizedCrop(p=percentage, height=height, width=width)
+    resizecrop_transform = A.RandomResizedCrop(p=percentage, size=(height, width))
     return resizecrop_transform(image=image)["image"]
 
 
@@ -70,9 +70,9 @@ def _erasing(image: np.ndarray, percentage: float) -> np.ndarray:
 
     erasing_transform = A.CoarseDropout(
         p=percentage,
-        max_holes=1,
-        hole_width_range=(width // 10, width // 5),
-        hole_height_range=(height // 10, height // 5),
+        num_holes_range=(1, 2),
+        hole_width_range=(width // 6, width // 4),
+        hole_height_range=(height // 6, height // 4),
     )
     return erasing_transform(image=image)["image"]
 
@@ -114,7 +114,7 @@ def _contrast(image: np.ndarray, percentage: float) -> np.ndarray:
         The image with adjusted contrast.
     """
     contrast_transform = A.RandomBrightnessContrast(
-        p=percentage, contrast_limit=(-0.2, 0.3), brightness_limit=(-0.2, 0.3)
+        p=percentage, contrast_limit=(-0.3, 0.3), brightness_limit=(-0.3, 0.3)
     )
     return contrast_transform(image=image)["image"]
 
