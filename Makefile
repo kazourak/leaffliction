@@ -3,23 +3,19 @@
 #################################################################################
 
 PROJECT_NAME = leaffliction
-PYTHON_VERSION = 3.10
-PYTHON_INTERPRETER = python
+PYTHON_INTERPRETER = python3
 VENV_DIR = .venv
 
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
-
 ## Install Python Dependencies
 .PHONY: requirements
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
+	$(PYTHON_INTERPRETER) -m pip install -e . -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-
-
-
 
 ## Delete all compiled Python files
 .PHONY: clean
@@ -55,14 +51,14 @@ create_environment:
 	@$(PYTHON_INTERPRETER) -m venv .venv
 	@echo ">>> New virtualenv created. Activate with:source $(VENV_DIR)/bin/activate"
 
-
-
-
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
-
+## Test the project
+.PHONY: test
+test:
+	$(PYTHON_INTERPRETER) -m pytest tests
 
 #################################################################################
 # Self Documenting Commands                                                     #
