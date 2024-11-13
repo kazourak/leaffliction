@@ -204,39 +204,43 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    # Get program argument
-    args = sys.argv[1:]
-    if len(args) != 1:
-        raise ValueError("Please, only provide the path to the image to augment.")
+    try:
+        # Get program argument
+        args = sys.argv[1:]
+        if len(args) != 1:
+            raise ValueError("Please, only provide the path to the image to augment.")
 
-    # Open file with OpenCV
-    image = cv2.imread(args[0])
+        # Open file with OpenCV
+        image = cv2.imread(args[0])
 
-    if image is None:
-        raise ValueError("The provided image path is invalid.")
+        if image is None:
+            raise ValueError("The provided image path is invalid.")
 
-    # Get file information
-    filename = pathlib.Path(args[0]).stem
-    extension = pathlib.Path(args[0]).suffix
-    path = pathlib.Path(args[0]).parent
+        # Get file information
+        filename = pathlib.Path(args[0]).stem
+        extension = pathlib.Path(args[0]).suffix
+        path = pathlib.Path(args[0]).parent
 
-    # Switch color profile BGR to RGB
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Switch color profile BGR to RGB
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    augmented_images = augment(image, 1)
+        augmented_images = augment(image, 1)
 
-    # Visualize all images
-    _visualize_all(image, augmented_images)
+        # Visualize all images
+        _visualize_all(image, augmented_images)
 
-    # Save augmented images
-    for func_name, augmented_image in augmented_images.items():
-        if (
-            cv2.imwrite(
-                f"{path}/{filename}_{func_name}{extension}",
-                cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR),
-            )
-            is True
-        ):
-            print(f"{filename}_{func_name}{extension} saved successfully.")
-        else:
-            print(f"Error saving {filename}_{func_name}{extension}.")
+        # Save augmented images
+        for func_name, augmented_image in augmented_images.items():
+            if (
+                    cv2.imwrite(
+                        f"{path}/{filename}_{func_name}{extension}",
+                        cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR),
+                    )
+                    is True
+            ):
+                print(f"{filename}_{func_name}{extension} saved successfully.")
+            else:
+                raise RuntimeError(f"Error saving {filename}_{func_name}{extension}.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)
