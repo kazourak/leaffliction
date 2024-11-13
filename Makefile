@@ -39,6 +39,7 @@ lint:
 .PHONY: format
 format:
 	black --config pyproject.toml leaffliction
+	isort leaffliction --settings-path pyproject.toml
 
 ## Download data from 42 intranet
 .PHONY: data
