@@ -1,9 +1,11 @@
-name: Run Pytest
+# .github/workflows/development.yml
+name: Development pipeline
+
 on:
   push:
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +21,14 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
+          pip install -e
           pip install -r requirements.txt
 
       - name: Run tests
         run: |
           pytest
+
+      - name: Run Flake8
+        run: |
+          source .venv/bin/activate
+          flake8 .
