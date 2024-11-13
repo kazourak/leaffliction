@@ -1,6 +1,6 @@
 import cv2
 
-from leaffliction.augmentation.Augmentation import augment
+from leaffliction import augment
 
 
 def test_augmentation() -> None:

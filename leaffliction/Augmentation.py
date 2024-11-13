@@ -232,11 +232,11 @@ if __name__ == "__main__":
         # Save augmented images
         for func_name, augmented_image in augmented_images.items():
             if (
-                    cv2.imwrite(
-                        f"{path}/{filename}_{func_name}{extension}",
-                        cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR),
-                    )
-                    is True
+                cv2.imwrite(
+                    f"{path}/{filename}_{func_name}{extension}",
+                    cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR),
+                )
+                is True
             ):
                 print(f"{filename}_{func_name}{extension} saved successfully.")
             else:

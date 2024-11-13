@@ -14,7 +14,6 @@ VENV_DIR = .venv
 .PHONY: requirements
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
-	$(PYTHON_INTERPRETER) -m pip install -e . -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
 ## Delete all compiled Python files
@@ -27,7 +26,7 @@ clean:
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	flake8 leaffliction
+	flake8 leaffliction  --disable-noqa
 	isort --check --diff --profile black leaffliction
 	black --check --config pyproject.toml leaffliction
 
