@@ -1,10 +1,12 @@
 import argparse
+import json
 import os
 import random as rnd
 import sys
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+
 
 
 def preprocess_image(image_path: str, label: int, target_size=(256, 256)) -> tuple:
@@ -44,8 +46,12 @@ def create_dataset(
     -------
     Dataset as a tf.data.Dataset.
     """
+
+
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
     dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
+
+
     if shuffle:
         dataset = dataset.shuffle(buffer_size=buffer_size)
     dataset = dataset.batch(int(batch_ratio ** (-1))).prefetch(tf.data.AUTOTUNE)
@@ -298,6 +304,7 @@ if __name__ == "__main__":
 
         train_dataset, test_dataset, labels = build_datasets(args.directory_path[0], batch_ratio=args.batch_ratio)
 
+
         model = load_model(256, len(labels))
 
         model, history = train_model(model, train_dataset, test_dataset, epoch=args.epochs)
@@ -311,6 +318,8 @@ if __name__ == "__main__":
         if args.save_model:
             model.save(args.save_dir + "/model.keras")
             model.save_weights(args.save_dir + "/model.weights.h5")
+            with open(args.save_dir + "/labels.json", "w") as f:
+                json.dump(labels, f)
 
     except Exception as e:
         print(">>> Oups something went wrong.", file=sys.stderr)
