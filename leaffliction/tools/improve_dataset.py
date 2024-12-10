@@ -1,16 +1,44 @@
+import argparse
+import concurrent.futures
 import os
-import sys
 
 import cv2
 import numpy as np
+import tqdm
 
 from leaffliction import augment
 from leaffliction.tools import extract_files
 
+CUSTOM_BAR = (
+    "{l_bar}"
+    "\033[92m{bar}\033[0m"
+    "| {n_fmt}/{total_fmt} "
+    "[{percentage:3.0f}%] "
+    "[Elapsed: {elapsed}]"
+)
+
+
+def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
+
+    paths_saved = []
+    _image = path_to_img(file)
+    _augmented_files = augment(_image, 1)
+
+    for _type, _img in _augmented_files.items():
+        _filename = build_filename(file, src_path, dest_path, _type)
+        save_image(_img, _filename)
+        paths_saved.append(_filename)
+
+    _filename = build_filename(file, src_path, dest_path, "original")
+    save_image(_image, _filename)
+    paths_saved.append(_filename)
+
+    return paths_saved
+
 
 def improve_dataset(path: str, dir_dest: str) -> list[str]:
     """
-    Augment each image from  the given path and save them into the directory dir_dest.
+    Augment each image from the given path and save them into the directory dir_dest.
     Parameters
     ----------
     path : Source path.
@@ -20,23 +48,17 @@ def improve_dataset(path: str, dir_dest: str) -> list[str]:
     -------
     All new files as a list of paths.
     """
-
     files = extract_files(path)
-
     new_files = []
 
-    for file in files:
-        _image = path_to_img(file)
-        _augmented_files = augment(_image, 1)
-        for _type, _img in _augmented_files.items():
-            print('.', end='', flush=True)
-            _filename = build_filename(file, path, dir_dest, _type)
-            save_image(_img, _filename)
-            new_files.append(_filename)
-
-        _filename = build_filename(file, path, dir_dest, "original")
-        save_image(_image, _filename)
-        new_files.append(_filename)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        with tqdm.tqdm(total=len(files), bar_format=CUSTOM_BAR) as progress_bar:
+            future_to_file = {
+                executor.submit(process_file, file, path, dir_dest): file for file in files
+            }
+            for future in concurrent.futures.as_completed(future_to_file):
+                new_files.extend(future.result())
+                progress_bar.update(1)
 
     return new_files
 
@@ -100,24 +122,34 @@ def build_filename(file_src: str, dir_src: str, dir_dest: str, additional_label:
     )
 
 
+def options_parser() -> argparse.ArgumentParser:
+    """
+    Use to handle program parameters and options.
+    Returns
+    -------
+    The parser object.
+    """
+
+    parser = argparse.ArgumentParser(
+        prog="Improve dataset",
+        description="This program should be used to improve the existent dataset.",
+        epilog="Please read the subject before proceeding to understand the input file format.",
+    )
+    parser.add_argument("source_path", type=str, nargs=1)
+    parser.add_argument("destination_path", type=str, nargs=1)
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Print the list of new files created."
+    )
+
+    return parser
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python improve_dataset.py <source_path> <dir_dest>")
-        exit()
+    args = options_parser().parse_args()
 
-    dir_path = sys.argv[1]
-    dir_dest = sys.argv[2]
+    if not os.path.isdir(args.destination_path[0]):
+        os.mkdir(args.destination_path[0])
 
-    if len(dir_path) == 0 or len(dir_dest) == 0:
-        print("Usage: python improve_dataset.py <source_path> <dir_dest>")
-        exit()
-
-    if not os.path.isdir(dir_path):
-        print("Directory does not exist.")
-        exit()
-
-    if not os.path.isdir(dir_dest):
-        os.mkdir(dir_dest)
-
-    new_files = improve_dataset(dir_path, dir_dest)
-    print(new_files)
+    new_files = improve_dataset(args.source_path[0], args.destination_path[0])
+    if args.verbose:
+        print(new_files)
