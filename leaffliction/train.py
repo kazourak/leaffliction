@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
-
 def preprocess_image(image_path: str, label: int, target_size=(256, 256)) -> tuple:
     """
     Convert image path to array and format it.
@@ -47,10 +46,8 @@ def create_dataset(
     Dataset as a tf.data.Dataset.
     """
 
-
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
     dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-
 
     if shuffle:
         dataset = dataset.shuffle(buffer_size=buffer_size)
@@ -234,7 +231,11 @@ def train_model(
     )
 
     hist = model.fit(
-        train_dataset, epochs=epoch, validation_data=test_dataset, callbacks=[early_stopping]
+        train_dataset,
+        epochs=epoch,
+        validation_data=test_dataset,
+        callbacks=[early_stopping],
+        batch_size=64,
     )
     return model, hist
 
@@ -302,8 +303,9 @@ if __name__ == "__main__":
 
         args = options_parser().parse_args()
 
-        train_dataset, test_dataset, labels = build_datasets(args.directory_path[0], batch_ratio=args.batch_ratio)
-
+        train_dataset, test_dataset, labels = build_datasets(
+            args.directory_path[0], batch_ratio=args.batch_ratio
+        )
 
         model = load_model(256, len(labels))
 
@@ -318,8 +320,8 @@ if __name__ == "__main__":
         if args.save_model:
             model.save(args.save_dir + "/model.keras")
             model.save_weights(args.save_dir + "/model.weights.h5")
-            with open(args.save_dir + "/labels.json", "w") as f:
-                json.dump(labels, f)
+            with open(args.save_dir + "/labels.json", "w", encoding="utf-8") as file:
+                json.dump(labels, file)
 
     except Exception as e:
         print(">>> Oups something went wrong.", file=sys.stderr)
