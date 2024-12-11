@@ -3,13 +3,16 @@ import sys
 
 from plantcv import plantcv as pcv
 import matplotlib.pyplot as plt
-import onnxruntime as ort
 import rembg
 import tqdm
 import cv2
 import argparse
 import numpy as np
-import torch
+
+
+# List of transformations names. Used for plotting and saving images
+transformations_names = ["Original", "Gaussian Blur", "Masked", "ROI", "Analysis", "Landmarks"]
+
 
 def is_in_circle(x, y, center_x, center_y, radius):
     """
@@ -63,16 +66,16 @@ def create_pseudo_landmarks_image(image, kept_mask):
     Returns:
     numpy.ndarray: The modified image with pseudoland-marks drawn
     """
-    pseudoland_marks = image.copy()
+    pseudo_landmarks = image.copy()
 
-    top_x, bottom_x, center_v_x = pcv.homology.x_axis_pseudolandmarks(img=pseudoland_marks, mask=kept_mask,
+    top_x, bottom_x, center_v_x = pcv.homology.x_axis_pseudolandmarks(img=pseudo_landmarks, mask=kept_mask,
                                                                       label='default')
 
-    pseudoland_marks = draw_pseudo_landmarks(pseudoland_marks, top_x, (0, 0, 255), 3)
-    pseudoland_marks = draw_pseudo_landmarks(pseudoland_marks, bottom_x, (255, 0, 255), 3)
-    pseudoland_marks = draw_pseudo_landmarks(pseudoland_marks, center_v_x, (255, 0, 0), 3)
+    pseudo_landmarks = draw_pseudo_landmarks(pseudo_landmarks, top_x, (0, 0, 255), 3)
+    pseudo_landmarks = draw_pseudo_landmarks(pseudo_landmarks, bottom_x, (255, 0, 255), 3)
+    pseudo_landmarks = draw_pseudo_landmarks(pseudo_landmarks, center_v_x, (255, 0, 0), 3)
 
-    return pseudoland_marks
+    return pseudo_landmarks
 
 
 def create_roi_image(image, masked, filled):
@@ -109,7 +112,74 @@ def create_roi_image(image, masked, filled):
     return roi_image, kept_mask
 
 
-def plot_all_images(images: list, transformations_names: list):
+def plot_stat_hist(label, sc=1):
+
+    """
+    Retrieve the histogram x and y values and plot them
+    """
+
+    y = pcv.outputs.observations['default_1'][label]['value']
+    x = [
+        i * sc
+        for i in pcv.outputs.observations['default_1'][label]['label']
+    ]
+    if label == "hue_frequencies":
+        x = x[:int(255 / 2)]
+        y = y[:int(255 / 2)]
+    if (
+            label == "blue-yellow_frequencies" or
+            label == "green-magenta_frequencies"
+    ):
+        x = [x + 128 for x in x]
+    plt.plot(x, y, label=label)
+
+
+def plot_histogram(image, kept_mask):
+
+    """
+    Plot the histogram of the image
+    """
+
+    dict_label = {
+        "blue_frequencies": 1,
+        "green_frequencies": 1,
+        "green-magenta_frequencies": 1,
+        "lightness_frequencies": 2.55,
+        "red_frequencies": 1,
+        "blue-yellow_frequencies": 1,
+        "hue_frequencies": 1,
+        "saturation_frequencies": 2.55,
+        "value_frequencies": 2.55
+    }
+
+    labels, _ = pcv.create_labels(mask=kept_mask)
+    pcv.analyze.color(
+        rgb_img=image,
+        colorspaces="all",
+        labeled_mask=labels,
+        label="default"
+    )
+
+    plt.subplots(figsize=(16, 9))
+    for key, val in dict_label.items():
+        plot_stat_hist(key, val)
+
+    plt.legend()
+
+    plt.title("Color Histogram")
+    plt.xlabel("Pixel intensity")
+    plt.ylabel("Proportion of pixels (%)")
+    plt.grid(
+        visible=True,
+        which='major',
+        axis='both',
+        linestyle='--',
+    )
+    plt.show()
+    plt.close()
+
+
+def plot_all_images(images: list):
     """
     Plot all images in the list
 
@@ -134,38 +204,14 @@ def plot_all_images(images: list, transformations_names: list):
 
 
 def transform_image(img: np.ndarray):
-    # Prepare the GPU session for rembg
-    session_options = ort.SessionOptions()
-    session_options.enable_mem_pattern = False
-    session_options.enable_cpu_mem_arena = False
-
-    # Detect available providers
-    available_providers = ort.get_available_providers()
-    print("Available providers:", available_providers)
-
-    # Choose the best available provider
-    preferred_providers = ['CoreMLExecutionProvider', 'CUDAExecutionProvider', 'TensorrtExecutionProvider']
-    selected_provider = None
-
-    for provider in preferred_providers:
-        if provider in available_providers:
-            selected_provider = provider
-            break
-
-    if selected_provider is None:
-        selected_provider = 'CPUExecutionProvider'
-
-    print(f"Using provider: {selected_provider}")
-
     # Remove background using the selected provider
-    img_no_bg = rembg.remove(img, session=rembg.new_session("isnet-general-use"), providers=[selected_provider])
-
+    img_no_bg = rembg.remove(img)
     # Rest of the function remains the same...
     # Step 2: Convert to grayscale with LAB space
-    img_lab = pcv.rgb2gray_lab(img_no_bg, channel='l')
+    img_hsv = pcv.rgb2gray_lab(img_no_bg, channel='l')
 
     # Step 3: Convert to binary ( Used to help differentiate plant and background )
-    img_binary = pcv.threshold.binary(gray_img=img_lab, threshold=35, object_type='light')
+    img_binary = pcv.threshold.binary(gray_img=img_hsv, threshold=60, object_type="light")
 
     # Step 4: Apply median blur ( Used to reduce image noise )
     img_blur = pcv.median_blur(img_binary, ksize=5)
@@ -174,7 +220,7 @@ def transform_image(img: np.ndarray):
     img_filled = pcv.fill(img_blur, size=200)
 
     # Mask image
-    img_masked = pcv.apply_mask(img=img, mask=img_filled, mask_color='black')
+    img_masked = pcv.apply_mask(img=img, mask=img_filled, mask_color='white')
 
     # Gaussian blur image
     gaussian_image = pcv.gaussian_blur(img_binary, ksize=(3, 3))
@@ -211,7 +257,6 @@ def options_parser() -> argparse.ArgumentParser:
         description="This program should be used to transform the image.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
-    # $> ./Transformation.[extension] ./Apple/apple_healthy/image (1).JPG
     parser.add_argument("image_path", type=str, nargs='?', help="Image file path")
     parser.add_argument("-src", "--source", type=str, nargs=1, help="Source directory path")
     parser.add_argument("-dst", "--destination", type=str, nargs=1, help="Destination directory path")
@@ -241,7 +286,7 @@ def transform_all(source: str, destination: str):
 
         # Save the images
         for i, transformation in enumerate(transformations):
-            cv2.imwrite(f"{destination}/{file.stem}_{i}{file.suffix}", transformation)
+            cv2.imwrite(f"{destination}/{file.stem}_{transformations_names[i+1]}{file.suffix}", transformation)
 
 
 def transform_one(image_path: str):
@@ -262,7 +307,7 @@ def transform_one(image_path: str):
     transformations.insert(0, img)
 
     # Plot
-    plot_all_images(transformations, ["Original", "Gaussian Blur", "Masked", "ROI", "Analysis", "Landmarks"])
+    plot_all_images(transformations)
 
 
 if __name__ == "__main__":
