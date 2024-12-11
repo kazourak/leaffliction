@@ -91,7 +91,7 @@ def create_pseudo_landmarks_image(image, kept_mask):
 def create_roi_image(image: np.ndarray, masked: np.ndarray, filled: np.ndarray) -> tuple:
     """
     Create an image with the region of interest (ROI) highlighted.
-    
+
     Args:
         image: Image to analyze.
         masked: Masked image.
