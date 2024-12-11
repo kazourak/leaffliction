@@ -1,17 +1,23 @@
+import argparse
 import pathlib
 import sys
 
-from plantcv import plantcv as pcv
-import matplotlib.pyplot as plt
-import rembg
-import tqdm
 import cv2
-import argparse
+import matplotlib.pyplot as plt
 import numpy as np
-
+from plantcv import plantcv as pcv
+import tqdm
 
 # List of transformations names. Used for plotting and saving images
-transformations_names = ["Original", "Gaussian Blur", "Masked", "ROI", "Analysis", "Landmarks"]
+TRANSFORMATIONS_NAMES = [
+    "Original",
+    "Gaussian Blur",
+    "Masked",
+    "ROI",
+    "Analysis",
+    "Landmarks",
+    "Histogram",
+]
 
 
 def is_in_circle(x, y, center_x, center_y, radius):
@@ -28,7 +34,7 @@ def is_in_circle(x, y, center_x, center_y, radius):
     Returns:
     bool: True if pixel is within the circle, False otherwise
     """
-    return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius ** 2
+    return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
 
 def draw_pseudo_landmarks(image, pseudo_landmarks, color, radius):
@@ -61,15 +67,16 @@ def create_pseudo_landmarks_image(image, kept_mask):
 
     Parameters:
     image (numpy.ndarray): The input image
-    kept_mask (numpy.ndarray): The mask to use for finding pseudoland-marks
+    kept_mask (numpy.ndarray): The mask to use for finding pseudo-landmarks
 
     Returns:
-    numpy.ndarray: The modified image with pseudoland-marks drawn
+    numpy.ndarray: The modified image with pseudo-landmarks drawn
     """
     pseudo_landmarks = image.copy()
 
-    top_x, bottom_x, center_v_x = pcv.homology.x_axis_pseudolandmarks(img=pseudo_landmarks, mask=kept_mask,
-                                                                      label='default')
+    top_x, bottom_x, center_v_x = pcv.homology.x_axis_pseudolandmarks(
+        img=pseudo_landmarks, mask=kept_mask, label="default"
+    )
 
     pseudo_landmarks = draw_pseudo_landmarks(pseudo_landmarks, top_x, (0, 0, 255), 3)
     pseudo_landmarks = draw_pseudo_landmarks(pseudo_landmarks, bottom_x, (255, 0, 255), 3)
@@ -88,15 +95,9 @@ def create_roi_image(image, masked, filled):
     roi_h = image.shape[0]
     roi_line_w = 5
 
-    roi = pcv.roi.rectangle(
-        img=masked,
-        x=roi_start_x,
-        y=roi_start_y,
-        w=roi_w,
-        h=roi_h
-    )
+    roi = pcv.roi.rectangle(img=masked, x=roi_start_x, y=roi_start_y, w=roi_w, h=roi_h)
 
-    kept_mask = pcv.roi.filter(mask=filled, roi=roi, roi_type='partial')
+    kept_mask = pcv.roi.filter(mask=filled, roi=roi, roi_type="partial")
 
     roi_image = image.copy()
     roi_image[kept_mask != 0] = (0, 255, 0)
@@ -106,124 +107,132 @@ def create_roi_image(image, masked, filled):
         (roi_start_x, roi_start_y),
         (roi_start_x + roi_w, roi_start_y + roi_h),
         color=(255, 0, 0),
-        thickness=roi_line_w
+        thickness=roi_line_w,
     )
 
     return roi_image, kept_mask
 
 
-def plot_stat_hist(label, sc=1):
+def plot_stat_hist(label: str, scale: float = 1.0):
+    """
+    Plot the histogram of the image colors.
+
+    Args:
+        label (str): The label to plot.
+        scale (float): The scale factor.
 
     """
-    Retrieve the histogram x and y values and plot them
-    """
+    observation_label = label + "_frequencies"
+    observation = pcv.outputs.observations["default_1"][observation_label]
+    y = observation["value"]
+    x = [i * scale for i in observation["label"]]
 
-    y = pcv.outputs.observations['default_1'][label]['value']
-    x = [
-        i * sc
-        for i in pcv.outputs.observations['default_1'][label]['label']
-    ]
-    if label == "hue_frequencies":
-        x = x[:int(255 / 2)]
-        y = y[:int(255 / 2)]
-    if (
-            label == "blue-yellow_frequencies" or
-            label == "green-magenta_frequencies"
-    ):
-        x = [x + 128 for x in x]
+    if label == "hue":
+        x = x[:128]
+        y = y[:128]
+    elif label in {"blue-yellow", "green-magenta"}:
+        x = [val + 128 for val in x]
+
     plt.plot(x, y, label=label)
 
 
-def plot_histogram(image, kept_mask):
-
+def create_histogram(image: np.ndarray, kept_mask: np.ndarray) -> plt.Figure:
     """
-    Plot the histogram of the image
-    """
+    Create a histogram of the image colors.
 
-    dict_label = {
-        "blue_frequencies": 1,
-        "green_frequencies": 1,
-        "green-magenta_frequencies": 1,
-        "lightness_frequencies": 2.55,
-        "red_frequencies": 1,
-        "blue-yellow_frequencies": 1,
-        "hue_frequencies": 1,
-        "saturation_frequencies": 2.55,
-        "value_frequencies": 2.55
+    Args:
+        image (np.ndarray): The image to analyze.
+        kept_mask (np.ndarray): The mask to use for the analysis.
+
+    Returns:
+        plt.Figure: The histogram plot.
+    """
+    scale_factors = {
+        "blue": 1,
+        "green": 1,
+        "green-magenta": 1,
+        "lightness": 2.55,
+        "red": 1,
+        "blue-yellow": 1,
+        "hue": 1,
+        "saturation": 2.55,
+        "value": 2.55,
     }
 
+    # Generate labels and analyze color spaces
     labels, _ = pcv.create_labels(mask=kept_mask)
-    pcv.analyze.color(
-        rgb_img=image,
-        colorspaces="all",
-        labeled_mask=labels,
-        label="default"
-    )
+    pcv.analyze.color(rgb_img=image, colorspaces="all", labeled_mask=labels, label="default")
 
-    plt.subplots(figsize=(16, 9))
-    for key, val in dict_label.items():
-        plot_stat_hist(key, val)
+    # Create and configure the plot
+    fig, ax = plt.subplots(figsize=(16, 9))
+    for label, scale in scale_factors.items():
+        plot_stat_hist(label, scale)
 
-    plt.legend()
+    ax.legend()
+    ax.set_title("Color Histogram")
+    ax.set_xlabel("Pixel intensity")
+    ax.set_ylabel("Proportion of pixels (%)")
+    ax.grid(visible=True, which="major", axis="both", linestyle="--")
 
-    plt.title("Color Histogram")
-    plt.xlabel("Pixel intensity")
-    plt.ylabel("Proportion of pixels (%)")
-    plt.grid(
-        visible=True,
-        which='major',
-        axis='both',
-        linestyle='--',
-    )
-    plt.show()
-    plt.close()
+    return fig
 
 
 def plot_all_images(images: list):
     """
-    Plot all images in the list
+    Plot all images in a grid.
 
-    Parameters:
-    images (list): List of images to plot
-    transformations_names (list): List of names for each image
+    Args:
+        images: The list of images to plot.
     """
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
     # Convert BGR to RGB
-    for i, img in enumerate(images):
-        images[i] = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    for i in range(6):
+        images[i] = cv2.cvtColor(images[i], cv2.COLOR_BGR2RGB)
 
     # Plot images
-    for i, ax in enumerate(axes.flat):
+    for i in range(6):
         axes[i // 3, i % 3].imshow(images[i])
-        axes[i // 3, i % 3].axis('off')
-        axes[i // 3, i % 3].set_title(f'Image: {transformations_names[i]}')
+        axes[i // 3, i % 3].axis("off")
+        axes[i // 3, i % 3].set_title(f"Image: {TRANSFORMATIONS_NAMES[i]}")
 
+    # Get histogram
+    histogram = images[-1]
+
+    # Show plot
     plt.show()
+    histogram.show()
 
 
-def transform_image(img: np.ndarray):
-    # Remove background using the selected provider
-    img_no_bg = rembg.remove(img)
-    # Rest of the function remains the same...
-    # Step 2: Convert to grayscale with LAB space
-    img_hsv = pcv.rgb2gray_lab(img_no_bg, channel='l')
+def transform_image(img: np.ndarray) -> list:
+    """
+    Transform the image using PlantCV.
 
-    # Step 3: Convert to binary ( Used to help differentiate plant and background )
-    img_binary = pcv.threshold.binary(gray_img=img_hsv, threshold=60, object_type="light")
+    Args:
+        img: The image to transform.
+
+    Returns:
+        list: The list of transformed images.
+
+    """
+    # Step 1: Convert to grayscale with LAB space with the blue channel
+    img_lab = pcv.rgb2gray_lab(img, channel="b")
+
+    # Step 2: Convert to binary ( Used to help differentiate plant and background )
+    img_binary = pcv.threshold.otsu(gray_img=img_lab, object_type="light")
+
+    # Step 3: Fill holes ( Used to reduce image noise )
+    img_filled = pcv.fill_holes(img_binary)
 
     # Step 4: Apply median blur ( Used to reduce image noise )
-    img_blur = pcv.median_blur(img_binary, ksize=5)
-
-    # Step 5: Fill holes ( Used to reduce image noise )
-    img_filled = pcv.fill(img_blur, size=200)
+    img_blur = pcv.median_blur(img_filled, ksize=5)
 
     # Mask image
-    img_masked = pcv.apply_mask(img=img, mask=img_filled, mask_color='white')
+    img_masked = pcv.apply_mask(img=img, mask=img_blur, mask_color="white")
 
     # Gaussian blur image
-    gaussian_image = pcv.gaussian_blur(img_binary, ksize=(3, 3))
+    gaussian_image = pcv.gaussian_blur(img_filled, ksize=(3, 3))
 
     # Create ROI image
     roi_image, roi_mask = create_roi_image(img, img_masked, img_filled)
@@ -234,33 +243,19 @@ def transform_image(img: np.ndarray):
     # Pseudo-landmarks image
     landmarks_image = create_pseudo_landmarks_image(img, roi_mask)
 
-    # List of images
-    transformations_list = [gaussian_image,
-                            img_masked,
-                            roi_image,
-                            analysis_image,
-                            landmarks_image]
+    # Histogram image
+    histogram_image = create_histogram(img, roi_mask)
+
+    transformations_list = [
+        gaussian_image,
+        img_masked,
+        roi_image,
+        analysis_image,
+        landmarks_image,
+        histogram_image,
+    ]
 
     return transformations_list
-
-
-def options_parser() -> argparse.ArgumentParser:
-    """
-    Use to handle program parameters and options.
-    Returns
-    -------
-    The parser object.
-    """
-
-    parser = argparse.ArgumentParser(
-        prog="Transformation",
-        description="This program should be used to transform the image.",
-        epilog="Please read the subject before proceeding to understand the input file format.",
-    )
-    parser.add_argument("image_path", type=str, nargs='?', help="Image file path")
-    parser.add_argument("-src", "--source", type=str, nargs=1, help="Source directory path")
-    parser.add_argument("-dst", "--destination", type=str, nargs=1, help="Destination directory path")
-    return parser
 
 
 def transform_all(source: str, destination: str):
@@ -281,12 +276,24 @@ def transform_all(source: str, destination: str):
         # Open the image
         img = cv2.imread(str(file))
 
+        if img is None:
+            print(f"Skipping {file} as it is not an image file.")
+            continue
+
         # Transform the image
         transformations = transform_image(img)
 
         # Save the images
-        for i, transformation in enumerate(transformations):
-            cv2.imwrite(f"{destination}/{file.stem}_{transformations_names[i+1]}{file.suffix}", transformation)
+        for i in range(len(transformations) - 1):
+            cv2.imwrite(
+                f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i+1]}{file.suffix}",
+                transformations[i],
+            )
+
+        # Save the histogram
+        transformations[-1].savefig(
+            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[-1]}{file.suffix}"
+        )
 
 
 def transform_one(image_path: str):
@@ -300,6 +307,9 @@ def transform_one(image_path: str):
     # Open the image
     img = cv2.imread(image_path)
 
+    if img is None:
+        raise ValueError("The provided image path is invalid.")
+
     # Transform the image
     transformations = transform_image(img)
 
@@ -308,6 +318,27 @@ def transform_one(image_path: str):
 
     # Plot
     plot_all_images(transformations)
+
+
+def options_parser() -> argparse.ArgumentParser:
+    """
+    Use to handle program parameters and options.
+    Returns
+    -------
+    The parser object.
+    """
+
+    parser = argparse.ArgumentParser(
+        prog="Transformation",
+        description="This program should be used to transform the image.",
+        epilog="Please read the subject before proceeding to understand the input file format.",
+    )
+    parser.add_argument("image_path", type=str, nargs="?", help="Image file path")
+    parser.add_argument("-src", "--source", type=str, nargs=1, help="Source directory path")
+    parser.add_argument(
+        "-dst", "--destination", type=str, nargs=1, help="Destination directory path"
+    )
+    return parser
 
 
 if __name__ == "__main__":
@@ -319,7 +350,9 @@ if __name__ == "__main__":
         elif args.image_path is not None:
             transform_one(args.image_path)
         else:
-            raise ValueError("Please, provide the image path or the source and destination directories.")
+            raise ValueError(
+                "Please, provide the image path or the source and destination directories."
+            )
 
     except Exception as e:
         print(">>> Oups something went wrong.", file=sys.stderr)

@@ -3,7 +3,11 @@ numpy
 opencv-python
 pandas
 onnxruntime-silicon
+albumentations
 plantcv
 tqdm
 rembg
+flake8
+black
+isort
 -e .
