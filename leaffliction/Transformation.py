@@ -21,7 +21,7 @@ TRANSFORMATIONS_NAMES = [
 ]
 
 
-def is_in_circle(x: int, y: int, center_x: int, center_y: int, radius: int):
+def is_in_circle(x: int, y: int, center_x: int, center_y: int, radius: int) -> bool:
     """
     Check if pixel (x, y) is within the circle defined by center_x, center_y, and radius.
 
@@ -39,7 +39,9 @@ def is_in_circle(x: int, y: int, center_x: int, center_y: int, radius: int):
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
 
-def draw_pseudo_landmarks(image: np.ndarray, pseudo_landmarks: list[list[int]], color: tuple, radius: int):
+def draw_pseudo_landmarks(
+    image: np.ndarray, pseudo_landmarks: list[list[int]], color: tuple, radius: int
+) -> np.ndarray:
     """
     Draw circles on the image at the given pseudo-landmark coordinates.
 
