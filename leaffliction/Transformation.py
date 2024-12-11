@@ -24,15 +24,16 @@ def is_in_circle(x, y, center_x, center_y, radius):
     """
     Check if pixel (x, y) is within the circle defined by center_x, center_y, and radius.
 
-    Parameters:
-    x (int): X-coordinate of the pixel
-    y (int): Y-coordinate of the pixel
-    center_x (int): X-coordinate of the circle center
-    center_y (int): Y-coordinate of the circle center
-    radius (int): Radius of the circle
+    Args:
+        x (int): X-coordinate of the pixel
+        y (int): Y-coordinate of the pixel
+        center_x (int): X-coordinate of the circle center
+        center_y (int): Y-coordinate of the circle center
+        radius (int): Radius of the circle
 
     Returns:
-    bool: True if pixel is within the circle, False otherwise
+        bool: True if pixel is within the circle, False otherwise
+
     """
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
@@ -41,14 +42,15 @@ def draw_pseudo_landmarks(image, pseudo_landmarks, color, radius):
     """
     Draw circles on the image at the given pseudo-landmark coordinates.
 
-    Parameters:
-    image (numpy.ndarray): The image array to draw on
-    pseudo_landmarks (list[list[int]]): List of pseudo-landmark coordinates in the form [[y1, x1], [y2, x2], ...]
-    color (tuple): RGB color value to use for the circles
-    radius (int): Radius of the circles to draw
+    Args:
+        image (numpy.ndarray): The image array to draw on
+        pseudo_landmarks (list[list[int]]): List of pseudo-landmark coordinates in the form [[y1, x1], [y2, x2], ...]
+        color (tuple): RGB color value to use for the circles
+        radius (int): Radius of the circles to draw
 
     Returns:
-    numpy.ndarray: The modified image array
+        numpy.ndarray: The modified image array
+
     """
 
     for landmark in pseudo_landmarks:
@@ -65,12 +67,13 @@ def create_pseudo_landmarks_image(image, kept_mask):
     """
     Create a displayable image with the pseudo-landmarks.
 
-    Parameters:
-    image (numpy.ndarray): The input image
-    kept_mask (numpy.ndarray): The mask to use for finding pseudo-landmarks
+    Args:
+        image (numpy.ndarray): The input image
+        kept_mask (numpy.ndarray): The mask to use for finding pseudo-landmarks
 
     Returns:
-    numpy.ndarray: The modified image with pseudo-landmarks drawn
+        numpy.ndarray: The modified image with pseudo-landmarks drawn
+
     """
     pseudo_landmarks = image.copy()
 
@@ -85,9 +88,18 @@ def create_pseudo_landmarks_image(image, kept_mask):
     return pseudo_landmarks
 
 
-def create_roi_image(image, masked, filled):
+def create_roi_image(image: np.ndarray, masked: np.ndarray, filled: np.ndarray) -> tuple:
     """
-    Create an image with the ROI rectangle and the mask
+    Create an image with the region of interest (ROI) highlighted.
+    
+    Args:
+        image: Image to analyze.
+        masked: Masked image.
+        filled: Filled image.
+
+    Returns:
+        tuple: The ROI image and the kept mask.
+
     """
     roi_start_x = 0
     roi_start_y = 0
@@ -146,6 +158,7 @@ def create_histogram(image: np.ndarray, kept_mask: np.ndarray) -> plt.Figure:
 
     Returns:
         plt.Figure: The histogram plot.
+
     """
     scale_factors = {
         "blue": 1,
@@ -183,6 +196,7 @@ def plot_all_images(images: list):
 
     Args:
         images: The list of images to plot.
+
     """
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
@@ -298,10 +312,13 @@ def transform_all(source: str, destination: str):
 
 def transform_one(image_path: str):
     """
-    Transform one image and display the results.
+    Transform a single image and plot the results.
 
-    Parameters:
-    image_path (str): The image file path
+    Args:
+        image_path:
+
+    Returns:
+        None
     """
 
     # Open the image
@@ -322,10 +339,10 @@ def transform_one(image_path: str):
 
 def options_parser() -> argparse.ArgumentParser:
     """
-    Use to handle program parameters and options.
-    Returns
-    -------
-    The parser object.
+    Create the command line options.
+
+    Returns:
+        argparse.ArgumentParser: The command line options.
     """
 
     parser = argparse.ArgumentParser(
