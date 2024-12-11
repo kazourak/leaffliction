@@ -10,4 +10,5 @@ rembg
 flake8
 black
 isort
+pytest
 -e .
