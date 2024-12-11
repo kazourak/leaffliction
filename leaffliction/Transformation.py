@@ -21,7 +21,7 @@ TRANSFORMATIONS_NAMES = [
 ]
 
 
-def is_in_circle(x, y, center_x, center_y, radius):
+def is_in_circle(x: int, y: int, center_x: int, center_y: int, radius: int):
     """
     Check if pixel (x, y) is within the circle defined by center_x, center_y, and radius.
 
@@ -39,7 +39,7 @@ def is_in_circle(x, y, center_x, center_y, radius):
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
 
-def draw_pseudo_landmarks(image, pseudo_landmarks, color, radius):
+def draw_pseudo_landmarks(image: np.ndarray, pseudo_landmarks: list[list[int]], color: tuple, radius: int):
     """
     Draw circles on the image at the given pseudo-landmark coordinates.
 
@@ -64,7 +64,7 @@ def draw_pseudo_landmarks(image, pseudo_landmarks, color, radius):
     return image
 
 
-def create_pseudo_landmarks_image(image, kept_mask):
+def create_pseudo_landmarks_image(image: np.ndarray, kept_mask: np.ndarray) -> np.ndarray:
     """
     Create a displayable image with the pseudo-landmarks.
 
@@ -94,9 +94,9 @@ def create_roi_image(image: np.ndarray, masked: np.ndarray, filled: np.ndarray) 
     Create an image with the region of interest (ROI) highlighted.
 
     Args:
-        image: Image to analyze.
-        masked: Masked image.
-        filled: Filled image.
+        image (numpy.ndarray): Image to analyze.
+        masked (numpy.ndarray): Masked image.
+        filled (numpy.ndarray): Filled image.
 
     Returns:
         tuple: The ROI image and the kept mask.
@@ -196,7 +196,7 @@ def plot_all_images(images: list):
     Plot all images in a grid.
 
     Args:
-        images: The list of images to plot.
+        images (list): The list of images to plot.
 
     """
 
@@ -225,10 +225,10 @@ def transform_image(img: np.ndarray) -> list:
     Transform the image using PlantCV.
 
     Args:
-        img: The image to transform.
+        img (numpy.ndarray): The image to transform.
 
     Returns:
-        list: The list of transformed images.
+        list (list): The list of transformed images.
 
     """
     # Step 1: Convert to grayscale with LAB space with the blue channel
@@ -273,15 +273,13 @@ def transform_image(img: np.ndarray) -> list:
     return transformations_list
 
 
-def process_image(args):
+def process_image(args: tuple):
     """
     Helper function to process a single image with transformations and save the results.
 
     Args:
         args (tuple): Contains the file path, source, destination, and transformation names.
 
-    Returns:
-        None
     """
     file, destination = args
     img = cv2.imread(str(file))
