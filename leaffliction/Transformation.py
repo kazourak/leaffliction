@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 import pathlib
 import sys
 
@@ -272,42 +273,66 @@ def transform_image(img: np.ndarray) -> list:
     return transformations_list
 
 
+def process_image(args):
+    """
+    Helper function to process a single image with transformations and save the results.
+
+    Args:
+        args (tuple): Contains the file path, source, destination, and transformation names.
+
+    Returns:
+        None
+    """
+    file, destination = args
+    img = cv2.imread(str(file))
+
+    if img is None:
+        print(f"Skipping {file} as it is not an image file.")
+        return
+
+    # Transform the image
+    transformations = transform_image(img)
+
+    # Save the images
+    for i in range(len(transformations) - 1):
+        cv2.imwrite(
+            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i+1]}{file.suffix}",
+            transformations[i],
+        )
+
+    # Save the histogram
+    transformations[-1].savefig(
+        f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[-1]}{file.suffix}"
+    )
+
+    # Close the histogram plot
+    plt.close(transformations[-1])
+
+
 def transform_all(source: str, destination: str):
     """
-    Transform all images in the source directory and save them in the destination directory.
+    Transform all images in the source directory and save them in the destination directory using multiprocessing.
 
     Parameters:
     source (str): The source directory path
     destination (str): The destination directory path
     """
-
     # Get all files in the source directory
     files = [f for f in pathlib.Path(source).rglob("*") if f.is_file()]
-
     files_count = len(files)
 
-    for file in tqdm.tqdm(files, total=files_count):
-        # Open the image
-        img = cv2.imread(str(file))
+    if files_count == 0:
+        print("No files found in the source directory.")
+        return
 
-        if img is None:
-            print(f"Skipping {file} as it is not an image file.")
-            continue
+    # Prepare arguments for parallel processing
+    tasks = [(file, destination) for file in files]
 
-        # Transform the image
-        transformations = transform_image(img)
+    # Use multiprocessing to process images in parallel
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        list(tqdm.tqdm(pool.imap_unordered(process_image, tasks), total=files_count))
 
-        # Save the images
-        for i in range(len(transformations) - 1):
-            cv2.imwrite(
-                f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i+1]}{file.suffix}",
-                transformations[i],
-            )
-
-        # Save the histogram
-        transformations[-1].savefig(
-            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[-1]}{file.suffix}"
-        )
+    print("All transformations completed.")
 
 
 def transform_one(image_path: str):
