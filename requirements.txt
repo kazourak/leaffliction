@@ -35,7 +35,7 @@ jsonschema-specifications==2024.10.1
 keras==3.7.0
 kiwisolver==1.4.7
 lazy_loader==0.4
--e git+ssh://git@github.com/kazourak/leaffliction.git@15818559f0e9d129ccedd345d906061b6cb1e4e5#egg=leaffliction
+-e .
 libclang==18.1.1
 locket==1.0.0
 Markdown==3.7
