@@ -23,18 +23,25 @@ TRANSFORMATIONS_NAMES = [
 
 def is_in_circle(x: int, y: int, center_x: int, center_y: int, radius: int) -> bool:
     """
-    Check if pixel (x, y) is within the circle defined by center_x, center_y, and radius.
+    Check if a pixel lies within a circle.
 
-    Args:
-        x (int): X-coordinate of the pixel
-        y (int): Y-coordinate of the pixel
-        center_x (int): X-coordinate of the circle center
-        center_y (int): Y-coordinate of the circle center
-        radius (int): Radius of the circle
+    Parameters
+    ----------
+    x : int
+        X-coordinate of the pixel.
+    y : int
+        Y-coordinate of the pixel.
+    center_x : int
+        X-coordinate of the circle center.
+    center_y : int
+        Y-coordinate of the circle center.
+    radius : int
+        Radius of the circle.
 
-    Returns:
-        bool: True if pixel is within the circle, False otherwise
-
+    Returns
+    -------
+    bool
+        True if the pixel is within the circle, False otherwise.
     """
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
@@ -43,19 +50,24 @@ def draw_pseudo_landmarks(
     image: np.ndarray, pseudo_landmarks: list[list[int]], color: tuple, radius: int
 ) -> np.ndarray:
     """
-    Draw circles on the image at the given pseudo-landmark coordinates.
+    Draw circles on an image at specified pseudo-landmark coordinates.
 
-    Args:
-        image (numpy.ndarray): The image array to draw on
-        pseudo_landmarks (list[list[int]]): List of pseudo-landmark coordinates in the form [[y1, x1], [y2, x2], ...]
-        color (tuple): RGB color value to use for the circles
-        radius (int): Radius of the circles to draw
+    Parameters
+    ----------
+    image : numpy.ndarray
+        The image array to draw on.
+    pseudo_landmarks : list[list[int]]
+        List of pseudo-landmark coordinates as [[y1, x1], [y2, x2], ...].
+    color : tuple
+        RGB color value for the circles.
+    radius : int
+        Radius of the circles to draw.
 
-    Returns:
-        numpy.ndarray: The modified image array
-
+    Returns
+    -------
+    numpy.ndarray
+        The modified image array.
     """
-
     for landmark in pseudo_landmarks:
         if len(landmark) >= 1 and len(landmark[0]) >= 2:
             center_x, center_y = landmark[0]
@@ -68,15 +80,19 @@ def draw_pseudo_landmarks(
 
 def create_pseudo_landmarks_image(image: np.ndarray, kept_mask: np.ndarray) -> np.ndarray:
     """
-    Create a displayable image with the pseudo-landmarks.
+    Create a displayable image with pseudo-landmarks.
 
-    Args:
-        image (numpy.ndarray): The input image
-        kept_mask (numpy.ndarray): The mask to use for finding pseudo-landmarks
+    Parameters
+    ----------
+    image : numpy.ndarray
+        The input image.
+    kept_mask : numpy.ndarray
+        The mask to use for identifying pseudo-landmarks.
 
-    Returns:
-        numpy.ndarray: The modified image with pseudo-landmarks drawn
-
+    Returns
+    -------
+    numpy.ndarray
+        The modified image with pseudo-landmarks drawn.
     """
     pseudo_landmarks = image.copy()
 
@@ -93,16 +109,21 @@ def create_pseudo_landmarks_image(image: np.ndarray, kept_mask: np.ndarray) -> n
 
 def create_roi_image(image: np.ndarray, masked: np.ndarray, filled: np.ndarray) -> tuple:
     """
-    Create an image with the region of interest (ROI) highlighted.
+    Create an image with a region of interest (ROI) highlighted.
 
-    Args:
-        image (numpy.ndarray): Image to analyze.
-        masked (numpy.ndarray): Masked image.
-        filled (numpy.ndarray): Filled image.
+    Parameters
+    ----------
+    image : numpy.ndarray
+        The input image to analyze.
+    masked : numpy.ndarray
+        The masked image.
+    filled : numpy.ndarray
+        The filled image.
 
-    Returns:
-        tuple: The ROI image and the kept mask.
-
+    Returns
+    -------
+    tuple
+        A tuple containing the ROI image and the kept mask.
     """
     roi_start_x = 0
     roi_start_y = 0
@@ -130,12 +151,18 @@ def create_roi_image(image: np.ndarray, masked: np.ndarray, filled: np.ndarray) 
 
 def plot_stat_hist(label: str, scale: float = 1.0):
     """
-    Plot the histogram of the image colors.
+    Plot the histogram of image colors for a specific label.
 
-    Args:
-        label (str): The label to plot.
-        scale (float): The scale factor.
+    Parameters
+    ----------
+    label : str
+        The label to plot.
+    scale : float, optional
+        The scale factor for the histogram, by default 1.0.
 
+    Returns
+    -------
+    None
     """
     observation_label = label + "_frequencies"
     observation = pcv.outputs.observations["default_1"][observation_label]
@@ -153,15 +180,19 @@ def plot_stat_hist(label: str, scale: float = 1.0):
 
 def create_histogram(image: np.ndarray, kept_mask: np.ndarray) -> plt.Figure:
     """
-    Create a histogram of the image colors.
+    Create a histogram of image colors.
 
-    Args:
-        image (np.ndarray): The image to analyze.
-        kept_mask (np.ndarray): The mask to use for the analysis.
+    Parameters
+    ----------
+    image : numpy.ndarray
+        The image to analyze.
+    kept_mask : numpy.ndarray
+        The mask used for the analysis.
 
-    Returns:
-        plt.Figure: The histogram plot.
-
+    Returns
+    -------
+    plt.Figure
+        The histogram plot as a Matplotlib figure.
     """
     scale_factors = {
         "blue": 1,
@@ -197,11 +228,15 @@ def plot_all_images(images: list):
     """
     Plot all images in a grid.
 
-    Args:
-        images (list): The list of images to plot.
+    Parameters
+    ----------
+    images : list
+        List of images to plot.
 
+    Returns
+    -------
+    None
     """
-
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
     # Convert BGR to RGB
@@ -224,14 +259,17 @@ def plot_all_images(images: list):
 
 def transform_image(img: np.ndarray) -> list:
     """
-    Transform the image using PlantCV.
+    Transform an image using PlantCV techniques.
 
-    Args:
-        img (numpy.ndarray): The image to transform.
+    Parameters
+    ----------
+    img : numpy.ndarray
+        The image to transform.
 
-    Returns:
-        list (list): The list of transformed images.
-
+    Returns
+    -------
+    list
+        List of transformed images.
     """
     # Step 1: Convert to grayscale with LAB space with the blue channel
     img_lab = pcv.rgb2gray_lab(img, channel="b")
@@ -277,11 +315,16 @@ def transform_image(img: np.ndarray) -> list:
 
 def process_image(args: tuple):
     """
-    Helper function to process a single image with transformations and save the results.
+    Process a single image with transformations and save the results.
 
-    Args:
-        args (tuple): Contains the file path, source, destination, and transformation names.
+    Parameters
+    ----------
+    args : tuple
+        Tuple containing the file path and destination directory.
 
+    Returns
+    -------
+    None
     """
     file, destination = args
     img = cv2.imread(str(file))
@@ -313,9 +356,16 @@ def transform_all(source: str, destination: str):
     """
     Transform all images in the source directory and save them in the destination directory using multiprocessing.
 
-    Parameters:
-    source (str): The source directory path
-    destination (str): The destination directory path
+    Parameters
+    ----------
+    source : str
+        Source directory path.
+    destination : str
+        Destination directory path.
+
+    Returns
+    -------
+    None
     """
     # Get all files in the source directory
     files = [f for f in pathlib.Path(source).rglob("*") if f.is_file()]
@@ -339,13 +389,15 @@ def transform_one(image_path: str):
     """
     Transform a single image and plot the results.
 
-    Args:
-        image_path:
+    Parameters
+    ----------
+    image_path : str
+        Path to the image file.
 
-    Returns:
-        None
+    Returns
+    -------
+    None
     """
-
     # Open the image
     img = cv2.imread(image_path)
 
@@ -364,12 +416,13 @@ def transform_one(image_path: str):
 
 def options_parser() -> argparse.ArgumentParser:
     """
-    Create the command line options.
+    Create command-line options for the script.
 
-    Returns:
-        argparse.ArgumentParser: The command line options.
+    Returns
+    -------
+    argparse.ArgumentParser
+        Parser object containing the command-line options.
     """
-
     parser = argparse.ArgumentParser(
         prog="Transformation",
         description="This program should be used to transform the image.",
