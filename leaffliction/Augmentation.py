@@ -216,7 +216,7 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
     """
     processed = {
         "CLAHE": _clahe,
-        "Zoom Blur": _zoom_blur,
+        "Zoom_Blur": _zoom_blur,
         "Rotate": _rotate,
         "Blur": _blur,
         "Erased": _erasing,

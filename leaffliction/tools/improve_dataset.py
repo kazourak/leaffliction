@@ -43,7 +43,7 @@ def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
         save_image(_img, _filename)
         paths_saved.append(_filename)
 
-    _filename = build_filename(file, src_path, dest_path, "original")
+    _filename = build_filename(file, src_path, dest_path, "Original")
     save_image(_image, _filename)
     paths_saved.append(_filename)
 
@@ -67,6 +67,7 @@ def improve_dataset(path: str, dir_dest: str) -> List[str]:
         All new files as a list of paths.
     """
     files = extract_files(path)
+    print(f"Found {len(files)} files to process.")
     new_files = []
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
