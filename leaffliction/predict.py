@@ -1,98 +1,122 @@
 import argparse
 import json
+import os
 import sys
 from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
 
 
-def preprocess_image(image_path: str, target_size=(256, 256)) -> Any:
+def preprocess_image(image_path, target_size=(256, 256)):
     """
-    Convert image path to array and format it.
+    Preprocesses the image for prediction.
+
     Parameters
     ----------
-    image_path : Path of the image to convert and process.
-    target_size : Size used to reformat the image.
+    image_path : str
+        Path to the image file.
+    target_size : tuple, optional
+        The target size to resize the image, by default (256, 256)
 
     Returns
     -------
-    Image.
+    numpy.ndarray
+        Preprocessed image ready for prediction.
     """
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize(image, target_size)
-    image = tf.cast(image, tf.float32) / 255.0
+    image = load_img(image_path, target_size=target_size)
+    image = img_to_array(image)
+    image = image / 255.0  # Normalize to [0, 1]
     return image
-
-
-def create_dataset(image_paths: list[str]) -> tf.data.Dataset:
-    """
-    Build dataset into a readable format for tensorflow.
-    Parameters
-    ----------
-    image_paths : list of path.
-
-    Returns
-    -------
-    Dataset as a tf.data.Dataset.
-    """
-    dataset = tf.data.Dataset.from_tensor_slices(image_paths)
-    dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.batch(1).prefetch(tf.data.AUTOTUNE)
-    return dataset
 
 
 def options_parser() -> argparse.ArgumentParser:
     """
     Use to handle program parameters and options.
+
     Returns
     -------
     The parser object.
     """
-
     parser = argparse.ArgumentParser(
         prog="Distribution",
-        description="This program should be used to see the distribution of plant types and states.",
-        epilog="Please read the subject before proceeding to understand the input file format.",
+        description="This program predicts the labels for all images in a given directory.",
+        epilog="Ensure the model path and directory are correctly specified.",
     )
-    parser.add_argument("model_path", type=str, nargs=1)
-    parser.add_argument("image_path", type=str, nargs=1)
-
+    parser.add_argument("model_path", type=str, nargs=1, help="Path to the trained model.")
+    parser.add_argument(
+        "images_path", type=str, nargs=1, help="Path to the directory containing images."
+    )
+    parser.add_argument("-p", "--plot", action="store_true", help="show the training history")
     return parser
+
+
+def predict(model: Any, labels: dict, files: list[str], plot: bool = False):
+    """
+    Predict a label for each image from the files path list.
+
+    Parameters
+    ----------
+    model : Model trained used to predict labels.
+    labels : All possible labels.
+    files : List of images path.
+    plot : bool, default False, plot images to predict.
+
+    Returns
+    -------
+
+    """
+    for file_path in files:
+
+        if os.path.isfile(file_path) and file_path.lower().endswith((".png", ".jpg", ".jpeg")):
+            try:
+                image = preprocess_image(file_path, target_size=(256, 256))
+
+                prediction = model.predict(np.expand_dims(image, axis=0))
+                img_prediction = prediction[0]
+
+                idx = np.argmax(img_prediction)
+                label = list(labels.keys())[idx]
+
+                print(f"Image: {os.path.basename(file_path)}")
+                print(f"Predicted: {label} with confidence {img_prediction[idx] * 100:.2f}%\n")
+
+                if plot:
+                    plt.figure(num=os.path.basename(file_path))
+                    plt.imshow(image)
+                    plt.title(f"Predicted: {label} ({img_prediction[idx] * 100:.2f}%)")
+                    plt.axis("off")
+                    plt.show()
+
+            except Exception as img_error:
+                print(f"Error processing image {os.path.basename(file_path)}: {img_error}")
 
 
 if __name__ == "__main__":
     try:
         args = options_parser().parse_args()
 
-        model = tf.keras.models.load_model(args.model_path[0])
+        model_path = args.model_path[0]
+        images_path = args.images_path[0]
 
-        model.summary()
-
-        image = preprocess_image(args.image_path[0], target_size=(256, 256))
-
-        print(type(image))
-
-        prediction = model.predict(np.expand_dims(image, axis=0))
-
-        img_prediction = prediction[0]
+        model = tf.keras.models.load_model(model_path)
 
         with open("models/labels.json", "r") as f:
             labels = json.load(f)
 
-        # get the index of the highest value of img_prediction
-        idx = np.argmax(img_prediction)
-        # get the nth elements of the dictionary labels
-        label = list(labels.keys())[idx]
+        if not os.path.isdir(images_path) and not os.path.isfile(images_path):
+            raise FileNotFoundError(f"The directory or file {images_path} does not exist.")
 
-        print(idx)
+        files_path = (
+            [os.path.join(images_path, filename) for filename in os.listdir(images_path)]
+            if os.path.isdir(images_path)
+            else [images_path]
+        )
 
-        plt.imshow(image)
-        plt.title(f"Predicted: {label} at {img_prediction[idx] * 100}")
-        plt.show()
+        predict(model, labels, files_path, plot=args.plot)
 
     except Exception as e:
-        print(">>> Oups something went wrong.", file=sys.stderr)
+        print(">>> Oops, something went wrong.", file=sys.stderr)
         print(e)

@@ -1,10 +1,11 @@
 import argparse
 import concurrent.futures
 import os
+from typing import List
 
 import cv2
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 from leaffliction import augment
 from leaffliction.tools import extract_files
@@ -19,6 +20,19 @@ CUSTOM_BAR = (
 
 
 def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
+    """
+    Augment the given image.
+
+    Parameters
+    ----------
+    file : Image path.
+    src_path : Source path.
+    dest_path : Destination path.
+
+    Returns
+    -------
+    Each path of the new images created and saved.
+    """
 
     paths_saved = []
     _image = path_to_img(file)
@@ -36,34 +50,42 @@ def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
     return paths_saved
 
 
-def improve_dataset(path: str, dir_dest: str) -> list[str]:
+def improve_dataset(path: str, dir_dest: str) -> List[str]:
     """
     Augment each image from the given path and save them into the directory dir_dest.
+
     Parameters
     ----------
-    path : Source path.
-    dir_dest : Destination path.
+    path : str
+        Source path.
+    dir_dest : str
+        Destination path.
 
     Returns
     -------
-    All new files as a list of paths.
+    List[str]
+        All new files as a list of paths.
     """
     files = extract_files(path)
     new_files = []
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        with tqdm.tqdm(total=len(files), bar_format=CUSTOM_BAR) as progress_bar:
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        with tqdm(total=len(files), bar_format=CUSTOM_BAR) as progress_bar:
             future_to_file = {
                 executor.submit(process_file, file, path, dir_dest): file for file in files
             }
             for future in concurrent.futures.as_completed(future_to_file):
-                new_files.extend(future.result())
+                try:
+                    result = future.result()
+                    new_files.extend(result)
+                except Exception as e:
+                    print(f"Error processing file {future_to_file[future]}: {e}")
                 progress_bar.update(1)
 
     return new_files
 
 
-def path_to_img(path: str, size: tuple = (256, 256)) -> np.ndarray:
+def path_to_img(path: str, size: tuple = (256, 256)):
     """
     Load and format the image from the given path.
     Parameters
@@ -97,7 +119,7 @@ def save_image(image: np.ndarray, file_name: str) -> str:
     if not os.path.exists(os.path.dirname(file_name)):
         os.makedirs(os.path.dirname(file_name))
 
-    cv2.imwrite(file_name, image)
+    cv2.imwrite(file_name, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     return file_name
 
 
