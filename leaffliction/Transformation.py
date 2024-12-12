@@ -1,4 +1,5 @@
 import argparse
+import itertools
 import multiprocessing
 import pathlib
 import sys
@@ -71,10 +72,9 @@ def draw_pseudo_landmarks(
     for landmark in pseudo_landmarks:
         if len(landmark) >= 1 and len(landmark[0]) >= 2:
             center_x, center_y = landmark[0]
-            for x in range(image.shape[0]):
-                for y in range(image.shape[1]):
-                    if is_in_circle(x, y, center_x, center_y, radius):
-                        image[y, x] = color
+            for x, y in itertools.product(range(image.shape[0]), range(image.shape[1])):
+                if is_in_circle(x, y, center_x, center_y, radius):
+                    image[y, x] = color
     return image
 
 
@@ -249,12 +249,8 @@ def plot_all_images(images: list):
         axes[i // 3, i % 3].axis("off")
         axes[i // 3, i % 3].set_title(f"Image: {TRANSFORMATIONS_NAMES[i]}")
 
-    # Get histogram
-    histogram = images[-1]
-
     # Show plot
     plt.show()
-    histogram.show()
 
 
 def transform_image(img: np.ndarray) -> list:

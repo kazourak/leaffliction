@@ -11,10 +11,11 @@ VENV_DIR = .venv
 #################################################################################
 
 ## Install Python Dependencies
-.PHONY: requirements
-requirements:
+.PHONY: setup
+setup:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	$(PYTHON_INTERPRETER) setup.py develop
 
 ## Delete all compiled Python files
 .PHONY: clean
@@ -22,6 +23,7 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 	rm -rf ./data/external/images
+	rm -rf .venv
 
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint

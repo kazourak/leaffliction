@@ -26,7 +26,9 @@ def _crop(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     height, width = image.shape[:2]
 
-    resizecrop_transform = A.RandomResizedCrop(p=percentage, size=(height, width))
+    resizecrop_transform = A.RandomResizedCrop(
+        p=percentage, size=(height, width), scale=(0.8, 1.0)
+    )
     return resizecrop_transform(image=image)["image"]
 
 
