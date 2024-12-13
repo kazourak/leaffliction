@@ -58,6 +58,17 @@ jobs:
           mkdir -p data/processed
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
+      - name: Zip_data
+        run: |
+          mkdir -p data_artifact
+          zip -r data_artifact/data.zip data
+
+      - name: Upload data directory
+        uses: actions/upload-artifact@v3
+        with:
+          name: data-artifact
+          path: data_artifact
+
   train:
     runs-on: ubuntu-latest
     needs: [data]
@@ -69,57 +80,29 @@ jobs:
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
 
+      - name: Download data artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: data-artifact
+          path: data_artifact
+
+      - name: Unzip data artifact
+        run: |
+          unzip data_artifact/data.zip -d data
+
       - name: Train_model
         run: |
           mkdir -p data/model
           python leaffliction/train.py data/processed/augmented --epoch 20 --plot --save_mode --batch_ratio 0.8 --save_dir data/model
-          
-
-  compress:
-    runs-on: ubuntu-latest
-    needs: data
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
-      - uses: syphar/restore-virtualenv@v1
-        id: cache-virtualenv
 
       - name: Zip_data
         run: |
-          mkdir -p artifact_save
-          zip -r artifact_save/data.zip data
+          mkdir -p train_artifact
+          zip -r train_artifact/train.zip data
 
-  compress_train:
-    runs-on: ubuntu-latest
-    needs: train
-    if: contains(github.event.head_commit.message, '--train_model')
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
-      - uses: syphar/restore-virtualenv@v1
-        id: cache-virtualenv
-
-      - name: Zip_data
-        run: |
-          mkdir -p artifact_save
-          zip -r artifact_save/train.zip data
-
-
-  save_artifact:
-    runs-on: ubuntu-latest
-    needs: [compress, compress_train]
-    if: contains(github.event.head_commit.message, '--artifact_save')
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
-      - uses: syphar/restore-virtualenv@v1
-        id: cache-virtualenv
-
-      - name: Upload artifacts
+      - name: Upload data directory
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts
-          path: artifact_save/
+          name: train-artifact
+          path: train_artifact
+          
