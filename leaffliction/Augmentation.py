@@ -219,7 +219,7 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
         "Zoom_Blur": _zoom_blur,
         "Rotate": _rotate,
         "Blur": _blur,
-        "Erased": _erasing,
+        "Contrast": _contrast,
         "Flip": _flip,
     }
     return {
