@@ -5,54 +5,31 @@ on:
   push:
 
 jobs:
-  development:
+  create-virtualenv:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10.12'
+      - uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
-
-      - name: Save virtual environment
-        run: |
-          cp -r .venv ../venv_cache
+      - run: pip install -r requirements.txt
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
   test:
     runs-on: ubuntu-latest
-    needs: development
+    needs: create-virtualenv
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
 
       - name: Run tests
         run: |
@@ -61,29 +38,17 @@ jobs:
 
       - name: Run Flake8
         run: |
-          source .venv/bin/activate
           flake8 leaffliction  --disable-noqa
 
   data:
     runs-on: ubuntu-latest
-    needs: development
+    needs: create-virtualenv
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Import_data
         run: |
@@ -92,7 +57,6 @@ jobs:
 
       - name: Improve_dataset
         run: |
-          source .venv/bin/activate
           mkdir data/processed
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
@@ -102,25 +66,13 @@ jobs:
     if: contains(github.event.head_commit.message, '--train_model')
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Train_model
         run: |
-          source .venv/bin/activate
           mkdir data/model
           python leaffliction/train.py data/processed/augmented --epoch 20 --plot --save_mode --batch_ratio 0.8 --save_dir data/model
           
