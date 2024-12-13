@@ -39,7 +39,11 @@ jobs:
           source .venv/bin/activate
           make data
           mkdir data/processed
+          mkdir data/model
+          mkdir artifact_save
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
+          python leaffliction/train.py data/processed/augmented --epoch 20 --plot --save_mode --batch_ratio 0.8 --save_dir data/model
+          zip -r artifact_save/data.zip data
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
