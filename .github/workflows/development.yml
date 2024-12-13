@@ -33,7 +33,6 @@ jobs:
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
           pytest tests
 
       - name: Run Flake8
@@ -52,7 +51,6 @@ jobs:
 
       - name: Import_data
         run: |
-          source .venv/bin/activate
           make data
 
       - name: Improve_dataset
@@ -82,25 +80,13 @@ jobs:
     needs: data
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Zip_data
         run: |
-          source .venv/bin/activate
           mkdir -p artifact_save
           zip -r artifact_save/data.zip data
 
@@ -110,25 +96,13 @@ jobs:
     if: contains(github.event.head_commit.message, '--train_model')
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Zip_data
         run: |
-          source .venv/bin/activate
           mkdir -p artifact_save
           zip -r artifact_save/train.zip data
 
@@ -139,21 +113,10 @@ jobs:
     if: contains(github.event.head_commit.message, '--artifact_save')
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Restore pip dependencies from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-
-      - name: Restore virtual environment
-        run: |
-          cp -r ../venv_cache .venv
-          source .venv/bin/activate
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
