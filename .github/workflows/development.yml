@@ -36,11 +36,11 @@ jobs:
 
       - name: Build project
         run: |
-          mkdir output
-          echo "Hello, World!" > output/hello.txt
+          make data
+          python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts
-          path: output/
+          path: data/
