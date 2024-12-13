@@ -64,7 +64,7 @@ jobs:
           zip -r data_artifact/data.zip data
 
       - name: Upload data directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: data-artifact
           path: data_artifact
@@ -81,7 +81,7 @@ jobs:
         id: cache-virtualenv
 
       - name: Download data artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: data-artifact
           path: data_artifact
@@ -101,8 +101,7 @@ jobs:
           zip -r train_artifact/train.zip data
 
       - name: Upload data directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: train-artifact
           path: train_artifact
-          
