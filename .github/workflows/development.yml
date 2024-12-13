@@ -37,7 +37,7 @@ jobs:
 
       - name: Run Flake8
         run: |
-          flake8 leaffliction  --disable-noqa
+          flake8 leaffliction --disable-noqa --config setup.cfg
 
   data:
     runs-on: ubuntu-latest
