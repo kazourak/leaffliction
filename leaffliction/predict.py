@@ -28,7 +28,7 @@ def preprocess_image(image_path, target_size=(256, 256)):
     """
     image = load_img(image_path, target_size=target_size)
     image = img_to_array(image)
-    image = image / 255.0  # Normalize to [0, 1]
+    # image = image / 255.0  # Normalize to [0, 1]
     return image
 
 
@@ -75,10 +75,11 @@ def predict(model: Any, labels: dict, files: list[str], plot: bool = False):
                 image = preprocess_image(file_path, target_size=(256, 256))
 
                 prediction = model.predict(np.expand_dims(image, axis=0))
+
                 img_prediction = prediction[0]
 
                 idx = np.argmax(img_prediction)
-                label = list(labels.keys())[idx]
+                label = labels[idx]
 
                 print(f"Image: {os.path.basename(file_path)}")
                 print(f"Predicted: {label} with confidence {img_prediction[idx] * 100:.2f}%\n")

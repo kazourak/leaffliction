@@ -237,7 +237,6 @@ def train_model(
         epochs=epoch,
         validation_data=test_dataset,
         callbacks=[early_stopping],
-        batch_size=64,
     )
     return model, hist
 
@@ -289,11 +288,24 @@ def options_parser() -> argparse.ArgumentParser:
         help="number of epochs to train the model.",
     )
     parser.add_argument(
-        "--batch_ratio",
+        "--batch_size",
         type=float,
-        default=1,
-        help="Used to reduce the dataset size.",
+        default=32,
+        help="Used to specify how many images to process in a batch.",
     )
+    parser.add_argument(
+        "--validation_ratio",
+        type=float,
+        default=0.2,
+        help="Used to specify the ratio of data used for validation.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=123456,
+        help="Used to reproduce a dataset split.",
+    )
+
     parser.add_argument("-p", "--plot", action="store_true", help="show the training history")
     parser.add_argument("-s", "--save_model", action="store_true", help="save the trained model")
     return parser
@@ -305,9 +317,32 @@ if __name__ == "__main__":
 
         args = options_parser().parse_args()
 
-        train_dataset, test_dataset, labels = build_datasets(
-            args.directory_path[0], batch_ratio=args.batch_ratio
+        # train_dataset, test_dataset, labels = build_datasets(
+        #     args.directory_path[0], batch_ratio=args.batch_ratio
+        # )
+
+        img_height, img_width = 256, 256
+
+        train_dataset = tf.keras.utils.image_dataset_from_directory(
+            args.directory_path[0],
+            validation_split=args.validation_ratio,  # 20% of data for validation (or test)
+            subset="training",  # Specify that this is the training subset
+            seed=args.seed,  # Seed for reproducibility
+            image_size=(img_height, img_width),
+            batch_size=args.batch_size,
         )
+
+        test_dataset = tf.keras.utils.image_dataset_from_directory(
+            args.directory_path[0],
+            validation_split=args.validation_ratio,  # 20% of data for validation (or test)
+            subset="validation",  # Specify that this is the validation subset
+            seed=args.seed,  # Seed for reproducibility
+            image_size=(img_height, img_width),
+            batch_size=args.batch_size,
+        )
+
+        labels = train_dataset.class_names
+        print("Class Names:", labels)
 
         model = load_model(256, len(labels))
 
