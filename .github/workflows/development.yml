@@ -42,7 +42,7 @@ jobs:
 
   data:
     runs-on: ubuntu-latest
-    needs: create-virtualenv
+    needs: test
 
     steps:
       - uses: actions/checkout@v1
@@ -57,7 +57,7 @@ jobs:
 
       - name: Improve_dataset
         run: |
-          mkdir data/processed
+          mkdir -p data/processed
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
   train:
@@ -73,7 +73,7 @@ jobs:
 
       - name: Train_model
         run: |
-          mkdir data/model
+          mkdir -p data/model
           python leaffliction/train.py data/processed/augmented --epoch 20 --plot --save_mode --batch_ratio 0.8 --save_dir data/model
           
 
@@ -101,13 +101,41 @@ jobs:
       - name: Zip_data
         run: |
           source .venv/bin/activate
-          mkdir artifact_save
+          mkdir -p artifact_save
           zip -r artifact_save/data.zip data
+
+  compress_train:
+    runs-on: ubuntu-latest
+    needs: train
+    if: contains(github.event.head_commit.message, '--train_model')
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Restore pip dependencies from cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Restore virtual environment
+        run: |
+          cp -r ../venv_cache .venv
+          source .venv/bin/activate
+
+      - name: Zip_data
+        run: |
+          source .venv/bin/activate
+          mkdir -p artifact_save
+          zip -r artifact_save/train.zip data
 
 
   save_artifact:
     runs-on: ubuntu-latest
-    needs: [compress]
+    needs: [compress, compress_train]
     if: contains(github.event.head_commit.message, '--artifact_save')
 
     steps:
