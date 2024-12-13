@@ -38,6 +38,7 @@ jobs:
         run: |
           source .venv/bin/activate
           make data
+          mkdir data/processed
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
       - name: Upload artifacts
