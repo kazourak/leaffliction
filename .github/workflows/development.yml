@@ -36,6 +36,7 @@ jobs:
 
       - name: Build project
         run: |
+          source .venv/bin/activate
           make data
           python leaffliction/tools/improve_dataset.py data/external/images data/processed/augmented/
 
