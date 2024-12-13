@@ -335,7 +335,7 @@ def process_image(args: tuple):
     # Save the images
     for i in range(len(transformations) - 1):
         cv2.imwrite(
-            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i+1]}{file.suffix}",
+            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i + 1]}{file.suffix}",
             transformations[i],
         )
 
