@@ -6,7 +6,7 @@ on:
 
 jobs:
   create-virtualenv:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v1
@@ -21,7 +21,7 @@ jobs:
         if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: create-virtualenv
 
     steps:
@@ -40,7 +40,7 @@ jobs:
           flake8 leaffliction --disable-noqa --config setup.cfg
 
   data:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: test
 
     steps:
@@ -70,7 +70,7 @@ jobs:
           path: data_artifact
 
   train:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [data]
     if: contains(github.event.head_commit.message, '--train_model')
 
