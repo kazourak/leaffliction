@@ -8,33 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def _crop(image: np.ndarray, percentage: float) -> np.ndarray:
-    """
-    Randomly resize and crop the image.
-
-    Parameters
-    ----------
-    image : np.ndarray
-        The image to randomly resize and crop.
-    percentage : float
-        The probability with which the image will be resized and cropped.
-
-    Returns
-    -------
-    np.ndarray
-        The randomly resized and cropped image.
-    """
-    height, width = image.shape[:2]
-
-    resizecrop_transform = A.RandomResizedCrop(
-        p=percentage, size=(height, width), scale=(0.8, 1.0)
-    )
-    return resizecrop_transform(image=image)["image"]
-
-
 def _rotate(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     Rotate the image.
+    Why?: To simulate different angles of view
 
     Parameters
     ----------
@@ -48,13 +25,56 @@ def _rotate(image: np.ndarray, percentage: float) -> np.ndarray:
     np.ndarray
         The rotated image.
     """
-    rotate_transform = A.Rotate(p=percentage, border_mode=cv2.BORDER_CONSTANT, limit=90)
+    rotate_transform = A.Rotate(p=percentage, limit=(-45, 45))
     return rotate_transform(image=image)["image"]
+
+
+def _clahe(image: np.ndarray, percentage: float) -> np.ndarray:
+    """
+    Apply CLAHE to the image.
+    Why?: For highlighting details in images with low light or saturated areas
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to apply CLAHE to.
+    percentage : float
+        The probability with which CLAHE will be applied to the image.
+
+    Returns
+    -------
+    np.ndarray
+        The image with CLAHE applied.
+    """
+    clahe_transform = A.CLAHE(p=percentage)
+    return clahe_transform(image=image)["image"]
+
+
+def _zoom_blur(image: np.ndarray, percentage: float) -> np.ndarray:
+    """
+    Apply zoom blur to the image.
+    Why?: To simulate motion blur in images
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to apply zoom blur to.
+    percentage : float
+        The probability with which zoom blur will be applied to the image.
+
+    Returns
+    -------
+    np.ndarray
+        The image with zoom blur applied.
+    """
+    zoom_blur_transform = A.ZoomBlur(p=percentage, max_factor=(1, 1.1))
+    return zoom_blur_transform(image=image)["image"]
 
 
 def _erasing(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     Randomly erase parts of the image.
+    Why?: To simulate occlusions in images
 
     Parameters
     ----------
@@ -73,8 +93,8 @@ def _erasing(image: np.ndarray, percentage: float) -> np.ndarray:
     erasing_transform = A.CoarseDropout(
         p=percentage,
         num_holes_range=(1, 2),
-        hole_width_range=(width // 6, width // 4),
-        hole_height_range=(height // 6, height // 4),
+        hole_width_range=(width // 8, width // 6),
+        hole_height_range=(height // 8, height // 6),
     )
     return erasing_transform(image=image)["image"]
 
@@ -82,6 +102,7 @@ def _erasing(image: np.ndarray, percentage: float) -> np.ndarray:
 def _blur(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     Blur the image.
+    Why?: To simulate out-of-focus images
 
     Parameters
     ----------
@@ -95,13 +116,14 @@ def _blur(image: np.ndarray, percentage: float) -> np.ndarray:
     np.ndarray
         The blurred image.
     """
-    blur_transform = A.GaussianBlur(p=percentage, blur_limit=(3, 21))
+    blur_transform = A.GaussianBlur(p=percentage, blur_limit=(3, 9))
     return blur_transform(image=image)["image"]
 
 
 def _contrast(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     Adjust the contrast of the image.
+    Why?: To simulate different lighting conditions
 
     Parameters
     ----------
@@ -124,6 +146,7 @@ def _contrast(image: np.ndarray, percentage: float) -> np.ndarray:
 def _flip(image: np.ndarray, percentage: float) -> np.ndarray:
     """
     Flip the image.
+    Why?: To simulate different angles of view
 
     Parameters
     ----------
@@ -192,9 +215,9 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
         The augmented images.
     """
     processed = {
-        "Crop": _crop,
+        "CLAHE": _clahe,
+        "Zoom_Blur": _zoom_blur,
         "Rotate": _rotate,
-        "Erasing": _erasing,
         "Blur": _blur,
         "Contrast": _contrast,
         "Flip": _flip,
