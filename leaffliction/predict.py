@@ -9,8 +9,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 
+from .tools.init_tf_env import init_tf_env
 
-def preprocess_image(image_path, target_size=(256, 256)):
+
+def _preprocess_image(image_path, target_size=(256, 256)):
     """
     Preprocesses the image for prediction.
 
@@ -28,7 +30,6 @@ def preprocess_image(image_path, target_size=(256, 256)):
     """
     image = load_img(image_path, target_size=target_size)
     image = img_to_array(image)
-    # image = image / 255.0  # Normalize to [0, 1]
     return image
 
 
@@ -53,7 +54,7 @@ def options_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def predict(model: Any, labels: dict, files: list[str], plot: bool = False):
+def _predict(model: Any, labels: dict, files: list[str], plot: bool = False):
     """
     Predict a label for each image from the files path list.
 
@@ -72,7 +73,7 @@ def predict(model: Any, labels: dict, files: list[str], plot: bool = False):
 
         if os.path.isfile(file_path) and file_path.lower().endswith((".png", ".jpg", ".jpeg")):
             try:
-                image = preprocess_image(file_path, target_size=(256, 256))
+                image = _preprocess_image(file_path)
 
                 prediction = model.predict(np.expand_dims(image, axis=0))
 
@@ -97,6 +98,8 @@ def predict(model: Any, labels: dict, files: list[str], plot: bool = False):
 
 if __name__ == "__main__":
     try:
+        init_tf_env()
+
         args = options_parser().parse_args()
 
         model_path = args.model_path[0]
@@ -116,7 +119,7 @@ if __name__ == "__main__":
             else [images_path]
         )
 
-        predict(model, labels, files_path, plot=args.plot)
+        _predict(model, labels, files_path, plot=args.plot)
 
     except Exception as e:
         print(">>> Oops, something went wrong.", file=sys.stderr)

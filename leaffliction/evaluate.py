@@ -1,13 +1,10 @@
 import argparse
-import json
-import os
 import sys
-from typing import Any
 
-import matplotlib.pyplot as plt
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
+
+from .tools.build_dataset import build_dataset
+from .tools.init_tf_env import init_tf_env
 
 
 def options_parser() -> argparse.ArgumentParser:
@@ -51,6 +48,8 @@ def options_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     try:
+        init_tf_env()
+
         args = options_parser().parse_args()
 
         model_path = args.model_path[0]
@@ -58,13 +57,11 @@ if __name__ == "__main__":
 
         model = tf.keras.models.load_model(model_path)
 
-        evaluate_dataset = tf.keras.utils.image_dataset_from_directory(
-            args.directory_path[0],
-            validation_split=args.validation_ratio,  # 20% of data for validation (or test)
-            subset="validation",  # Specify that this is the validation subset
-            seed=args.seed,  # Seed for reproducibility
-            image_size=(256, 256),
+        (_, evaluate_dataset) = build_dataset(
+            directory_path,
             batch_size=args.batch_size,
+            validation_ratio=args.validation_ratio,
+            seed=args.seed,
         )
 
         test_loss, test_acc = model.evaluate(evaluate_dataset)
