@@ -78,7 +78,7 @@ jobs:
           
           git add data_artifact
           git commit -m "Zip and shasum created from push on ${branch_name} by ${user_name}"
-          git push origin project_dataset
+          git push https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} project_dataset
 
       - name: Upload data directory
         uses: actions/upload-artifact@v4
