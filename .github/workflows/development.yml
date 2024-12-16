@@ -69,8 +69,8 @@ jobs:
         run: |
           shasum data_artifact/data.zip > data_artifact/sha.txt
           
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "farinaleo"
+          git config --global user.email "farinaleo@users.noreply.github.com"
           git checkout -b project_dataset || git switch project_dataset
           
           branch_name="${GITHUB_REF##*/}"
@@ -78,7 +78,8 @@ jobs:
           
           git add data_artifact
           git commit -m "Zip and shasum created from push on ${branch_name} by ${user_name}"
-          git push https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} project_dataset
+          git push origin project_dataset
+        continue-on-error: true
 
       - name: Upload data directory
         uses: actions/upload-artifact@v4
