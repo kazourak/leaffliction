@@ -1,3 +1,4 @@
+
 # leaffliction
 
 An innovative computer vision project utilizing leaf image analysis for disease recognition.
@@ -199,7 +200,8 @@ tf.keras.layers.Dense(64, activation="relu"),
 tf.keras.layers.Dense(output_size, activation="softmax"),
 ```
 - The first dense layer has 64 neurons with ReLU activation to learn high-level features.
-- The final dense layer has `output_size` neurons with a **softmax** activation, producing a probability distribution over the classes.
+- The final dense layer has `output_size` neurons with a **softmax** activation, producing a probability distribution
+  over the classes.
 
 
 ### Compilation
@@ -215,7 +217,7 @@ optimizer="adam"
 ```python
 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 ```
-- `SparseCategoricalCrossentropy` is used for multi-class classification when labels are integers (not one-hot encoded).
+- `SparseCategoricalCrossentropy` is used for multi-class classification when labels are integers.
 
 #### Metrics
 ```python
@@ -225,7 +227,8 @@ metrics=["accuracy"]
 
 
 ### Model Summary
-The architecture extracts features with convolution and pooling, reduces overfitting with dropout, and uses fully connected layers for classification. It's suitable for image-based multi-class classification tasks. 
+The architecture extracts features with convolution and pooling, reduces overfitting with dropout, and uses fully
+connected layers for classification. It's suitable for image-based multi-class classification tasks. 
 
 Key Points
 - Depth: Deeper layers extract higher-level features.
