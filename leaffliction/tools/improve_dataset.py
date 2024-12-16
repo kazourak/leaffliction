@@ -1,6 +1,7 @@
 import argparse
 import concurrent.futures
 import os
+import sys
 from typing import List
 
 import cv2
@@ -168,11 +169,16 @@ def options_parser() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
-    args = options_parser().parse_args()
+    try:
+        args = options_parser().parse_args()
 
-    if not os.path.isdir(args.destination_path[0]):
-        os.mkdir(args.destination_path[0])
+        if not os.path.isdir(args.destination_path[0]):
+            os.mkdir(args.destination_path[0])
 
-    new_files = improve_dataset(args.source_path[0], args.destination_path[0])
-    if args.verbose:
-        print(new_files)
+        new_files = improve_dataset(args.source_path[0], args.destination_path[0])
+        if args.verbose:
+            print(new_files)
+
+    except Exception as e:
+        print(">>> Oups something went wrong.", file=sys.stderr)
+        print(e, file=sys.stderr)

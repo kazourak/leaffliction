@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import multiprocessing
+import os
 import pathlib
 import sys
 
@@ -424,10 +425,18 @@ def options_parser() -> argparse.ArgumentParser:
         description="This program should be used to transform the image.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
-    parser.add_argument("image_path", type=str, nargs="?", help="Image file path")
-    parser.add_argument("-src", "--source", type=str, nargs=1, help="Source directory path")
     parser.add_argument(
-        "-dst", "--destination", type=str, nargs=1, help="Destination directory path"
+        "source_path",
+        type=str,
+        nargs=1,
+        help="Image or directory path to  transform. If you give a directory please define the destination option.",
+    )
+    parser.add_argument(
+        "-dst",
+        "--destination",
+        type=str,
+        nargs=1,
+        help="Destination directory path (must be used only with a directory source).",
     )
     return parser
 
@@ -436,13 +445,15 @@ if __name__ == "__main__":
     try:
         args = options_parser().parse_args()
 
-        if args.source is not None and args.destination is not None:
-            transform_all(args.source[0], args.destination[0])
-        elif args.image_path is not None:
-            transform_one(args.image_path)
+        if os.path.isfile(args.source_path[0]) and args.destination is None:
+            transform_one(args.image_path[0])
+        elif os.path.isdir(args.source_path[0]) and args.destination is not None:
+            transform_all(args.source_path[0], args.destination)
         else:
             raise ValueError(
-                "Please, provide the image path or the source and destination directories."
+                "Bad usage: \n"
+                + "1 - Give a valid image path without the destination argument\n"
+                + "2 - Give a valid directory path with the destination option."
             )
 
     except Exception as e:
