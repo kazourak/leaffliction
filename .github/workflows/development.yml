@@ -61,7 +61,24 @@ jobs:
       - name: Zip_data
         run: |
           mkdir -p data_artifact
+          mv models data
           zip -r data_artifact/data.zip data
+
+      - name: push zip and shasum
+        if: ${{ success() }}
+        run: |
+          shasum data_artifact/data.zip > data_artifact/sha.txt
+          
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b project_dataset || git switch project_dataset
+          
+          branch_name="${GITHUB_REF##*/}"
+          user_name="${GITHUB_ACTOR}"
+          
+          git add data_artifact
+          git commit -m "Zip and shasum created from push on ${branch_name} by ${user_name}"
+          git push origin project_dataset
 
       - name: Upload data directory
         uses: actions/upload-artifact@v4
