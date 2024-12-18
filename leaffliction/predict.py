@@ -4,12 +4,18 @@ import os
 import sys
 from typing import Any
 
+from Transformation import get_mask
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tools.init_tf_env import init_tf_env
 
-from .tools.init_tf_env import init_tf_env
+RED = "\033[0;31m"
+GREEN = "\033[0;32m"
+
+NO_COLOR = "\033[0m"
 
 
 def _preprocess_image(image_path, target_size=(256, 256)):
@@ -82,14 +88,20 @@ def _predict(model: Any, labels: dict, files: list[str], plot: bool = False):
                 idx = np.argmax(img_prediction)
                 label = labels[idx]
 
+                basename = str(os.path.basename(file_path))
                 print(f"Image: {os.path.basename(file_path)}")
-                print(f"Predicted: {label} with confidence {img_prediction[idx] * 100:.2f}%\n")
+                print(
+                    f"Predicted: {GREEN if label in basename else RED}{label}{NO_COLOR}"
+                    + f" with confidence {img_prediction[idx] * 100:.2f}%\n"
+                )
 
                 if plot:
-                    plt.figure(num=os.path.basename(file_path))
-                    plt.imshow(image)
-                    plt.title(f"Predicted: {label} ({img_prediction[idx] * 100:.2f}%)")
-                    plt.axis("off")
+                    fig, ax = plt.subplots(ncols=2)
+                    fig.canvas.manager.set_window_title(
+                        basename + f" Predicted: {label} ({img_prediction[idx] * 100:.2f}%)"
+                    )
+                    ax[0].imshow(cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB))
+                    ax[1].imshow(cv2.cvtColor(get_mask(file_path), cv2.COLOR_BGR2RGB))
                     plt.show()
 
             except Exception as img_error:

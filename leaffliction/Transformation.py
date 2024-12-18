@@ -1,4 +1,5 @@
 import argparse
+from collections.abc import Iterable
 import itertools
 import multiprocessing
 import os
@@ -409,6 +410,30 @@ def transform_one(image_path: str):
 
     # Plot
     plot_all_images(transformations)
+
+
+def get_mask(image_path: str) -> np.ndarray:
+    """
+    Return the masked image.
+    Parameters
+    ----------
+    image_path : Leaf to processed.
+
+    Returns
+    -------
+    The processed image as a np.ndarray.
+    """
+    img = cv2.imread(image_path)
+
+    if img is None:
+        raise ValueError("The provided image path is invalid.")
+
+    img_lab = pcv.rgb2gray_lab(img, channel="b")
+    img_binary = pcv.threshold.otsu(gray_img=img_lab, object_type="light")
+    img_filled = pcv.fill_holes(img_binary)
+    img_blur = pcv.median_blur(img_filled, ksize=5)
+
+    return pcv.apply_mask(img=img, mask=img_blur, mask_color="white")
 
 
 def options_parser() -> argparse.ArgumentParser:

@@ -2,9 +2,8 @@ import argparse
 import sys
 
 import tensorflow as tf
-
-from .tools.build_dataset import build_dataset
-from .tools.init_tf_env import init_tf_env
+from tools.build_dataset import build_dataset
+from tools.init_tf_env import init_tf_env
 
 
 def options_parser() -> argparse.ArgumentParser:
@@ -67,7 +66,7 @@ if __name__ == "__main__":
         test_loss, test_acc = model.evaluate(evaluate_dataset)
 
         print("Evaluation dataset size", len(evaluate_dataset) * args.batch_size)
-        print("Evaluation accuracy:", test_acc)
+        print(f"Evaluation accuracy: {float(test_acc * 100):.2f} %")
 
     except Exception as e:
         print(">>> Oops, something went wrong.", file=sys.stderr)
