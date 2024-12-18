@@ -1,5 +1,4 @@
 import argparse
-from collections.abc import Iterable
 import itertools
 import multiprocessing
 import os
@@ -352,7 +351,8 @@ def process_image(args: tuple):
 
 def transform_all(source: str, destination: str):
     """
-    Transform all images in the source directory and save them in the destination directory using multiprocessing.
+    Transform all images in the source directory and save them in the destination directory
+    using multiprocessing.
 
     Parameters
     ----------
@@ -454,7 +454,8 @@ def options_parser() -> argparse.ArgumentParser:
         "source_path",
         type=str,
         nargs=1,
-        help="Image or directory path to  transform. If you give a directory please define the destination option.",
+        help="Image or directory path to  transform. If you give a directory please define the "
+        + "destination option.",
     )
     parser.add_argument(
         "-dst",

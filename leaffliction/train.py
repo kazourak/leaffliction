@@ -71,8 +71,9 @@ def _train_model(
     -------
     A tuple with the model and the training history.
     """
-    # Small callback function used to stop the training process when the validation loss is lower than the previous one
-    # three times in a row. If this function stops the training it restores the weights (from the third back).
+    # Small callback function used to stop the training process when the validation loss is lower
+    # than the previous one three times in a row. If this function stops the training it restores
+    # the weights (from the third back).
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=3, restore_best_weights=True
     )
@@ -157,7 +158,8 @@ def options_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="Distribution",
-        description="This program should be used to see the distribution of plant types and states.",
+        description="This program should be used to see the distribution of plant types and "
+        + "states.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
     parser.add_argument("directory_path", type=str, nargs=1)

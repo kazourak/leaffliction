@@ -136,7 +136,8 @@ def options_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="Distribution",
-        description="This program should be used to see the distribution of plant types and states.",
+        description="This program should be used to see the distribution of plant types and"
+        + " states.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
     parser.add_argument("directory_path", type=str, nargs=1)

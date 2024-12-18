@@ -13,7 +13,8 @@ def build_dataset(
 
     Parameters
     ----------
-    data_path : Path of the dataset> Must contain subdirectories with images. Each subdirectory corresponds to a class.
+    data_path : Path of the dataset> Must contain subdirectories with images. Each subdirectory
+    corresponds to a class.
     batch_size : Size of the batches.
     validation_ratio : Ratio of data used for the validation dataset.
     seed : Magic number used to reproduce a build.
