@@ -1,24 +1,10 @@
-import argparse
-import concurrent.futures
 import os
 import random
-import sys
-from typing import List
 
 import cv2
 import numpy as np
-from tqdm import tqdm
 
 from leaffliction.Augmentation import augment
-from leaffliction.tools.get_files import extract_files
-
-CUSTOM_BAR = (
-    "{l_bar}"
-    "\033[92m{bar}\033[0m"
-    "| {n_fmt}/{total_fmt} "
-    "[{percentage:3.0f}%] "
-    "[Elapsed: {elapsed}]"
-)
 
 
 def process_file(file: str, src_path: str, dest_path: str, nb_images: int) -> list[str]:
@@ -53,43 +39,6 @@ def process_file(file: str, src_path: str, dest_path: str, nb_images: int) -> li
         i += 1
 
     return paths_saved
-
-
-def improve_dataset(path: str, dir_dest: str) -> List[str]:
-    """
-    Augment each image from the given path and save them into the directory dir_dest.
-
-    Parameters
-    ----------
-    path : str
-        Source path.
-    dir_dest : str
-        Destination path.
-
-    Returns
-    -------
-    List[str]
-        All new files as a list of paths.
-    """
-    files = extract_files(path)
-    print(f"Found {len(files)} files to process.")
-    new_files = []
-
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        with tqdm(total=len(files), bar_format=CUSTOM_BAR) as progress_bar:
-            future_to_file = {
-                executor.submit(process_file, file, path, dir_dest): file for file in files
-            }
-            for future in concurrent.futures.as_completed(future_to_file):
-                try:
-                    result = future.result()
-                    new_files.extend(result)
-                except Exception as e:
-                    print(f"Error processing file {future_to_file[future]}: {e}")
-                    print(e.__traceback__)
-                progress_bar.update(1)
-
-    return new_files
 
 
 def path_to_img(path: str, size: tuple = (256, 256)):
@@ -153,41 +102,3 @@ def build_filename(file_src: str, dir_src: str, dir_dest: str, additional_label:
     return os.path.normpath(
         f"{dir_dest}/{_filename_split[0]}_{additional_label}{_filename_split[1]}"
     )
-
-
-def options_parser() -> argparse.ArgumentParser:
-    """
-    Use to handle program parameters and options.
-    Returns
-    -------
-    The parser object.
-    """
-
-    parser = argparse.ArgumentParser(
-        prog="Improve dataset",
-        description="This program should be used to improve the existent dataset.",
-        epilog="Please read the subject before proceeding to understand the input file format.",
-    )
-    parser.add_argument("source_path", type=str, nargs=1)
-    parser.add_argument("destination_path", type=str, nargs=1)
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Print the list of new files created."
-    )
-
-    return parser
-
-
-if __name__ == "__main__":
-    try:
-        args = options_parser().parse_args()
-
-        if not os.path.isdir(args.destination_path[0]):
-            os.mkdir(args.destination_path[0])
-
-        new_files = improve_dataset(args.source_path[0], args.destination_path[0])
-        if args.verbose:
-            print(new_files)
-
-    except Exception as e:
-        print(">>> Oups something went wrong.", file=sys.stderr)
-        print(e, file=sys.stderr)

@@ -4,8 +4,7 @@ import random
 import sys
 
 from Distribution import distribution
-from tools.improve_dataset import (build_filename, path_to_img, process_file,
-                                   save_image)
+from tools.process_image import build_filename, path_to_img, process_file, save_image
 
 CUSTOM_BAR = (
     "{l_bar}"
@@ -16,31 +15,19 @@ CUSTOM_BAR = (
 )
 
 
-def get_random(elems: list, number: int) -> list:
-
-    kept_elements = []
-
-    while len(kept_elements) < number:
-        _element = random.choice(elems)
-        if _element not in kept_elements:
-            kept_elements.append(_element)
-
-    return kept_elements
-
-
-def random_get_files(directories: list, max_number: int) -> list:
-    files_selected = []
-
-    for directory in directories:
-        _files = get_random(os.listdir(directory), max_number)
-        _files = list(dict.fromkeys(_files))
-        print(len(_files))
-        files_selected.extend(list(map(lambda x: os.path.join(directory, x), _files)))
-
-    return files_selected
-
-
 def copy_dir(dir_path: str, source_path: str, destination_path: str):
+    """
+    Copy all files from dir_path to destination_path.
+    Parameters
+    ----------
+    dir_path : Path of the directory to copy.
+    source_path : Main source directory.
+    destination_path : Destination directory.
+
+    Returns
+    -------
+
+    """
     images_path = [
         os.path.join(dir_path, image_path)
         for image_path in os.listdir(dir_path)
@@ -57,6 +44,20 @@ def copy_dir(dir_path: str, source_path: str, destination_path: str):
 
 
 def augment_directory(dir_name: str, source_path: str, destination_path: str, max_image: int):
+    """
+    Augment random picked image from a source directory to match the maximum number of images
+    required.
+    Parameters
+    ----------
+    dir_name : Name of the directory to augment.
+    source_path : Source directory.
+    destination_path : Destination directory.
+    max_image : Maximum number of images to augment.
+
+    Returns
+    -------
+
+    """
     print(dir_name)
     dir_path = os.path.join(source_path, dir_name)
     dest_dir = os.path.join(destination_path, dir_name)
@@ -81,11 +82,14 @@ def options_parser() -> argparse.ArgumentParser:
     """
 
     parser = argparse.ArgumentParser(
-        prog="Balance",
-        description="This program should be used to balance the dataset.",
-        epilog="Please read the subject before proceeding to understand the input file format.",
+        prog="improve_dataset",
+        description="This program should be used to augment image from the dataset to have"
+        + " for each class the same number of images.",
+        epilog="Please read the subject and the README before proceeding to understand the"
+        + " input file format.",
     )
     parser.add_argument("directory_path", type=str, nargs=1)
+    parser.add_argument("destination_path", type=str, nargs=1)
     parser.add_argument(
         "--seed",
         type=int,
@@ -98,7 +102,6 @@ def options_parser() -> argparse.ArgumentParser:
         default=1,
         help="Factor used to multiply the number of images in the dataset.",
     )
-    parser.add_argument("destination_path", type=str, nargs=1)
     return parser
 
 
