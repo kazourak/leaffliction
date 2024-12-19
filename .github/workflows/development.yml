@@ -112,3 +112,25 @@ jobs:
         with:
           name: train-artifact
           path: train_artifact
+
+  build_docs:
+    runs-on: ubuntu-22.04
+    needs: create-virtualenv
+    # if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
+
+      - name: Build documentation
+        id: docs_build
+        run: |
+          make build_docs
+
+      - name: Upload documentation as artifact
+        id: docs_artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apidocs/
