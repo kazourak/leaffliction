@@ -224,8 +224,8 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
         "Flip": _flip,
     }
     return {
-        augmentation_name: processed[augmentation_name](image, percentage)
-        for augmentation_name in processed
+        augmentation_name: augmentation_func(image, percentage)
+        for augmentation_name, augmentation_func in processed.items()
     }
 
 

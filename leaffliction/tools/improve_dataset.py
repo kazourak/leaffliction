@@ -1,6 +1,7 @@
 import argparse
 import concurrent.futures
 import os
+import random
 import sys
 from typing import List
 
@@ -8,8 +9,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from leaffliction import augment
-from leaffliction.tools import extract_files
+from leaffliction.Augmentation import augment
+from leaffliction.tools.get_files import extract_files
 
 CUSTOM_BAR = (
     "{l_bar}"
@@ -20,7 +21,7 @@ CUSTOM_BAR = (
 )
 
 
-def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
+def process_file(file: str, src_path: str, dest_path: str, nb_images: int) -> list[str]:
     """
     Augment the given image.
 
@@ -29,24 +30,27 @@ def process_file(file: str, src_path: str, dest_path: str) -> list[str]:
     file : Image path.
     src_path : Source path.
     dest_path : Destination path.
+    nb_images : Number of images to save.
 
     Returns
     -------
     Each path of the new images created and saved.
     """
 
+    i = 1
     paths_saved = []
     _image = path_to_img(file)
     _augmented_files = augment(_image, 1)
 
     for _type, _img in _augmented_files.items():
-        _filename = build_filename(file, src_path, dest_path, _type)
+        _filename = build_filename(
+            file, src_path, dest_path, _type + str(int(random.random() * 1000000))
+        )
         save_image(_img, _filename)
         paths_saved.append(_filename)
-
-    _filename = build_filename(file, src_path, dest_path, "Original")
-    save_image(_image, _filename)
-    paths_saved.append(_filename)
+        if i == nb_images:
+            break
+        i += 1
 
     return paths_saved
 
@@ -82,6 +86,7 @@ def improve_dataset(path: str, dir_dest: str) -> List[str]:
                     new_files.extend(result)
                 except Exception as e:
                     print(f"Error processing file {future_to_file[future]}: {e}")
+                    print(e.__traceback__)
                 progress_bar.update(1)
 
     return new_files
@@ -121,7 +126,11 @@ def save_image(image: np.ndarray, file_name: str) -> str:
     if not os.path.exists(os.path.dirname(file_name)):
         os.makedirs(os.path.dirname(file_name))
 
-    cv2.imwrite(file_name, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    try:
+        cv2.imwrite(file_name, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    except Exception as e:
+        print(f"Error saving image {file_name}")
+        raise ValueError(f"Error saving image {file_name} {e}")
     return file_name
 
 
