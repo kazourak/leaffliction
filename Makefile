@@ -52,6 +52,21 @@ create_environment:
 	@$(PYTHON_INTERPRETER) -m venv .venv
 	@echo ">>> New virtualenv created. Activate with:source $(VENV_DIR)/bin/activate"
 
+## Build the html documentation
+.PHONY: build_docs
+build_docs:
+	pydoctor \
+    --project-name=${PROJECT_NAME} \
+    --project-version=0.1 \
+    --project-url=https://github.com/kazourak/${PROJECT_NAME}/ \
+    --docformat=numpy \
+    ./leaffliction
+
+## Serve the html documentation
+.PHONY: serve_docs
+serve_docs:
+	python3 -m http.server --directory ./apidocs 8000
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################

@@ -83,6 +83,7 @@ psutil==6.1.0
 pycodestyle==2.12.1
 pydantic==2.10.3
 pydantic_core==2.27.1
+pydoctor==24.11.1
 pyflakes==3.2.0
 Pygments==2.18.0
 pyparsing==3.2.0
