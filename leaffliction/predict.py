@@ -2,7 +2,8 @@
 Module: Predict
 
 This module provides functionalities for making predictions using trained machine learning models.
-It includes functions for preprocessing images, loading models, and performing inference on new data.
+It includes functions for preprocessing images, loading models, and performing inference on new
+data.
 """
 
 import argparse
