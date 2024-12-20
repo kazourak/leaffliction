@@ -59,6 +59,7 @@ build_docs:
     --project-name=${PROJECT_NAME} \
     --project-version=0.1 \
     --project-url=https://github.com/kazourak/${PROJECT_NAME}/ \
+	--html-base-url=https://kazourak.github.io/${PROJECT_NAME}/ \
     --docformat=numpy \
     ./leaffliction
 
