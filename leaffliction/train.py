@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
         _save(
             model=model,
-            dataset_path=args.directory_path,
+            dataset_path=args.directory_path[0],
             save_dir=args.save_dir,
             save_model=args.save_model,
             zip=args.zip,
