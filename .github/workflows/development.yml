@@ -68,17 +68,7 @@ jobs:
         if: ${{ success() }}
         run: |
           shasum data_artifact/data.zip > data_artifact/sha.txt
-          
-          git config --global user.name "farinaleo"
-          git config --global user.email "farinaleo@users.noreply.github.com"
-          git checkout -b project_dataset || git switch project_dataset
-          
-          branch_name="${GITHUB_REF##*/}"
-          user_name="${GITHUB_ACTOR}"
-          
-          git add data_artifact
-          git commit -m "Zip and shasum created from push on ${branch_name} by ${user_name}"
-          git push origin project_dataset
+
         continue-on-error: true
 
       - name: Upload data directory
