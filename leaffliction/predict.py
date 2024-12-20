@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
         model = tf.keras.models.load_model(model_path)
 
-        with open("models/labels.json", "r") as f:
+        with open(os.path.join(os.path.dirname(model_path), "labels.json"), "r") as f:
             labels = json.load(f)
 
         if not os.path.isdir(images_path) and not os.path.isfile(images_path):
