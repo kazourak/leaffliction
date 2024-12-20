@@ -37,8 +37,9 @@ _Don't forget ! If you want a script usage you can call the option `--help`._
     `python leaffliction/Augmentation <image_path>` Augment a single image by using six methods:
     clahe, zoom blur, rotate, blur contrast and flip.
     
-    `python leaffliction/tools/improve_dataset.py <dataset_directory_path> <destination_path> -v` Augment the entire
-    data set and save the produced images into the destination directory.
+    `python leaffliction/improve_dataset.py <dataset_directory_path> <destination_path>` Augment the dataset
+     and save the produced images into the destination directory. After the improvement each class will have the same
+     number of images. The option `--multiply_factor` is an option used to enlarge the dataset.
 
 - ### Transform data
     `python leaffliction/Transform.py <source_path> --dest <destination_path>`Transformations ensure to focus on
