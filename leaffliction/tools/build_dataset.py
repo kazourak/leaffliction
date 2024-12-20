@@ -1,3 +1,12 @@
+"""
+Module: Build_dataset
+
+This module provides functions to build datasets for training and evaluation from a specified
+directory. It includes the `build_dataset` function, which loads image data, splits it into
+training and validation sets based on the provided ratio, and returns TensorFlow datasets ready
+for model training and evaluation.
+"""
+
 import tensorflow as tf
 
 

@@ -1,3 +1,11 @@
+"""
+Module: Balance
+
+This module provides functionalities to balance datasets by copying and processing image files.
+It includes functions to copy directories, process images, and manage distributions to ensure
+a balanced distribution of data for machine learning tasks.
+"""
+
 import argparse
 import os
 import random

@@ -1,3 +1,11 @@
+"""
+Module: Distribution
+
+This module provides functions to analyze and retrieve the distribution of images within a dataset
+directory. It includes functionalities to get the list of subfolders and their respective image
+counts, facilitating the balancing of datasets for machine learning tasks.
+"""
+
 import argparse
 import os
 import sys

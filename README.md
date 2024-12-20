@@ -250,3 +250,7 @@ https://www.tensorflow.org/tutorials/keras/classification
 https://www.youtube.com/playlist?list=PLQY2H8rRoyvwWuPiWnuTDBHe7I0fMSsfO
 
 https://www.tensorflow.org/api_docs/python/tf/keras
+
+## Api doc
+
+Check out our api documentation [here](https://kazourak.github.io/leaffliction/)

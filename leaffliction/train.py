@@ -1,3 +1,10 @@
+"""
+Module: Train
+
+This module provides functionalities for training machine learning models.
+It includes functions to build and compile models, load datasets, and manage the training process.
+"""
+
 import argparse
 import json
 import os

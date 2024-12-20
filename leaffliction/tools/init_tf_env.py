@@ -1,3 +1,11 @@
+"""
+Module: Init_tf_env
+
+This module provides functions to initialize and configure the TensorFlow environment.
+It includes setup for GPU memory management to optimize TensorFlow's performance on
+machines with available GPUs.
+"""
+
 import tensorflow as tf
 
 

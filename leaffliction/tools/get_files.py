@@ -1,3 +1,11 @@
+"""
+Module: Get_files
+
+This module provides functions to retrieve file and directory information from a given path.
+It includes functions to extract all files, get subdirectories, and retrieve files within
+directories, facilitating dataset management for machine learning workflows.
+"""
+
 import os
 
 

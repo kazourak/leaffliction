@@ -1,3 +1,12 @@
+"""
+Module: Process_image
+
+This module provides functions for processing and augmenting images. It includes
+functionalities to load images from disk, apply augmentations, and save the processed
+images to a specified destination. These functions facilitate the preparation of image
+data for machine learning tasks.
+"""
+
 import os
 import random
 

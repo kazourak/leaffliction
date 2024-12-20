@@ -1,3 +1,11 @@
+"""
+Module: Augmentation
+
+This module provides image augmentation functions to simulate various transformations,
+such as rotation, scaling, and flipping. These augmentations enhance the diversity
+of the training dataset, improving the robustness of machine learning models.
+"""
+
 import argparse
 import pathlib
 import sys
