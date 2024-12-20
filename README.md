@@ -112,9 +112,9 @@ CNNs have evolved from small-scale experiments to the backbone of modern compute
 
 
 ```python
-def load_model(input_size: int, output_size: int) -> tf.keras.Model:
+def _load_model(input_size: int, output_size: int) -> tf.keras.Model:
     """
-    Build and compile the CNN model.
+    Build and compile the CNN model from tensorflow tutorial.
     Parameters
     ----------
     input_size : Length of input image side.
@@ -126,26 +126,29 @@ def load_model(input_size: int, output_size: int) -> tf.keras.Model:
     """
     model = tf.keras.models.Sequential(
         [
+            # Extract features layers.
             tf.keras.layers.Input(shape=(input_size, input_size, 3)),
-            tf.keras.layers.Conv2D(32, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D((2, 2)),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D((2, 2)),
             tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
             tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
-            tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+            tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
+            tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
+            tf.keras.layers.MaxPooling2D((2, 2)),
+            # Hidden layer (learn).
             tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(64, activation="relu"),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(512, activation="relu"),
+            # Use soft max to extract the highest result (the predicted label).
             tf.keras.layers.Dense(output_size, activation="softmax"),
         ]
     )
     model.compile(
+        # Function used to optimise weights during the training session.
         optimizer="adam",
+        # Function used to evaluate the result.
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=["accuracy"],
     )
@@ -180,9 +183,9 @@ The model uses multiple pairs of `Conv2D` and `MaxPooling2D` layers to extract h
 
 #### Dropout Layers
 ```python
-tf.keras.layers.Dropout(0.2)
+tf.keras.layers.Dropout(0.5)
 ```
-- Regularization technique that randomly drops 20% of neurons during training.
+- Regularization technique that randomly drops 50% of neurons during training.
 - Prevents overfitting by forcing the model to generalize better.
 
 
@@ -196,10 +199,10 @@ tf.keras.layers.Flatten()
 
 #### Dense Layers
 ```python
-tf.keras.layers.Dense(64, activation="relu"),
+tf.keras.layers.Dense(512, activation="relu"),
 tf.keras.layers.Dense(output_size, activation="softmax"),
 ```
-- The first dense layer has 64 neurons with ReLU activation to learn high-level features.
+- The first dense layer has 512 neurons with ReLU activation to learn high-level features.
 - The final dense layer has `output_size` neurons with a **softmax** activation, producing a probability distribution
   over the classes.
 
