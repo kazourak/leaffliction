@@ -61,7 +61,6 @@ jobs:
       - name: Zip_data
         run: |
           mkdir -p data_artifact
-          mv models data
           zip -r data_artifact/data.zip data
 
       - name: push zip and shasum
