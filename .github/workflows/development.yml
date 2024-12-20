@@ -56,7 +56,7 @@ jobs:
       - name: Improve_dataset
         run: |
           mkdir -p data/processed
-          python leaffliction/improve_dataset.py data/external/images data/processed/augmented/ --multiply_factor 3
+          python leaffliction/Balance.py data/external/images data/processed/augmented/ --multiply_factor 3
 
       - name: Zip_data
         run: |

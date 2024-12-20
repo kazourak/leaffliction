@@ -82,7 +82,7 @@ def options_parser() -> argparse.ArgumentParser:
     """
 
     parser = argparse.ArgumentParser(
-        prog="improve_dataset",
+        prog="balance",
         description="This program should be used to augment image from the dataset to have"
         + " for each class the same number of images.",
         epilog="Please read the subject and the README before proceeding to understand the"
