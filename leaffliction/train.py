@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tools.build_dataset import build_dataset
 from tools.init_tf_env import init_tf_env
+from tools.zip import zip_directories
 
 
 def _load_model(input_size: int, output_size: int) -> tf.keras.Model:
@@ -110,27 +111,26 @@ def _plot_training(hist) -> None:
 
 def _save(
     model: tf.keras.models.Sequential,
-    train_dataset: tf.data.Dataset,
-    evaluate_dataset: tf.data.Dataset,
+    dataset_path: str,
     save_dir: str,
     save_model: bool,
-    save_dataset: bool,
+    zip: bool,
 ):
     """
     Save the trained model and the datasets if the user wants it.
     Parameters
     ----------
     model : trained model.
-    train_dataset : Dataset used to train the model.
-    evaluate_dataset : Dataset used to evaluate the model.
+    dataset_path : Path of the dataset.
     save_dir : Path to save.
     save_model : If the user wants to save the model.
-    save_dataset : If the user wants to save the datasets.
+    zip : zip the dataset and the model into a file call ARCHIVE.zip..
 
     Returns
     -------
 
     """
+    model_dir = None
     if save_model:
         model_dir = os.path.join(save_dir, "model")
         if not os.path.exists(model_dir):
@@ -140,12 +140,11 @@ def _save(
         with open(model_dir + "/labels.json", "w", encoding="utf-8") as file:
             json.dump(labels, file)
 
-    if save_dataset:
-        dataset_dir = os.path.join(save_dir, "dataset")
-        if not os.path.exists(dataset_dir):
-            os.makedirs(dataset_dir)
-        train_dataset.save(dataset_dir + "/train_dataset.tfrecords")
-        evaluate_dataset.save(dataset_dir + "/evaluate_dataset.tfrecords")
+    if zip:
+        sources = [dataset_path]
+        if model_dir is not None:
+            sources.append(model_dir)
+        zip_directories("ARCHIVE.zip", sources)
 
 
 def options_parser() -> argparse.ArgumentParser:
@@ -197,9 +196,9 @@ def options_parser() -> argparse.ArgumentParser:
     parser.add_argument("-p", "--plot", action="store_true", help="show the training history")
     parser.add_argument("--save_model", action="store_true", help="save the trained model")
     parser.add_argument(
-        "--save_dataset",
+        "--zip",
         action="store_true",
-        help="save the dataset used to train evaluate the model.",
+        help="zip the dataset and the model into a file call ARCHIVE.zip.",
     )
     return parser
 
@@ -228,12 +227,11 @@ if __name__ == "__main__":
             _plot_training(history)
 
         _save(
-            model,
-            train_dataset,
-            evaluate_dataset,
-            args.save_dir,
-            args.save_model,
-            args.save_dataset,
+            model=model,
+            dataset_path=args.directory_path,
+            save_dir=args.save_dir,
+            save_model=args.save_model,
+            zip=args.zip,
         )
 
     except Exception as e:
