@@ -1,3 +1,4 @@
+import argparse
 import pathlib
 import sys
 from typing import Any
@@ -223,28 +224,51 @@ def augment(image: np.ndarray, percentage: float) -> dict[str, Any]:
         "Flip": _flip,
     }
     return {
-        augmentation_name: processed[augmentation_name](image, percentage)
-        for augmentation_name in processed
+        augmentation_name: augmentation_func(image, percentage)
+        for augmentation_name, augmentation_func in processed.items()
     }
+
+
+def options_parser() -> argparse.ArgumentParser:
+    """
+    Create command-line options for the script.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Parser object containing the command-line options.
+    """
+    parser = argparse.ArgumentParser(
+        prog="Augmentation",
+        description="This program should be used to augment an image.",
+        epilog="Please read the subject before proceeding to understand the input file format.",
+    )
+    parser.add_argument(
+        "image_path",
+        type=str,
+        nargs=1,
+        help="Image path to Augment.",
+    )
+
+    return parser
 
 
 if __name__ == "__main__":
     try:
         # Get program argument
-        args = sys.argv[1:]
-        if len(args) != 1:
-            raise ValueError("Please, only provide the path to the image to augment.")
+        args = options_parser().parse_args()
+        file_path = args.image_path[0]
 
         # Open file with OpenCV
-        image = cv2.imread(args[0])
+        image = cv2.imread(file_path)
 
         if image is None:
             raise ValueError("The provided image path is invalid.")
 
         # Get file information
-        filename = pathlib.Path(args[0]).stem
-        extension = pathlib.Path(args[0]).suffix
-        path = pathlib.Path(args[0]).parent
+        filename = pathlib.Path(file_path).stem
+        extension = pathlib.Path(file_path).suffix
+        path = pathlib.Path(file_path).parent
 
         # Switch color profile BGR to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

@@ -1,177 +1,18 @@
 import argparse
 import json
 import os
-import random as rnd
 import sys
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from tools.build_dataset import build_dataset
+from tools.init_tf_env import init_tf_env
+from tools.zip import zip_directories
 
 
-def preprocess_image(image_path: str, label: int, target_size=(256, 256)) -> tuple:
+def _load_model(input_size: int, output_size: int) -> tf.keras.Model:
     """
-    Convert image path to array and format it.
-    Parameters
-    ----------
-    image_path : Path of the image to convert and process.
-    label : Associated label to the given image.
-    target_size : Size used to reformat the image.
-
-    Returns
-    -------
-    Image and label as a tuple.
-    """
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize(image, target_size)
-    image = tf.cast(image, tf.float32) / 255.0
-    return image, label
-
-
-def create_dataset(
-    image_paths: list[str], labels: list[int], batch_ratio=1, shuffle=True, buffer_size=1000
-) -> tf.data.Dataset:
-    """
-    Build dataset into a readable format for tensorflow.
-    Parameters
-    ----------
-    image_paths : list of path.
-    labels : list of associated labels.
-    batch_ratio : ratio used to reduce the dataset size.
-    shuffle : Shuffle the dataset or not.
-    buffer_size : Maximum size of the buffer.
-
-    Returns
-    -------
-    Dataset as a tf.data.Dataset.
-    """
-
-    dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
-    dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-
-    if shuffle:
-        dataset = dataset.shuffle(buffer_size=buffer_size)
-    dataset = dataset.batch(int(batch_ratio ** (-1))).prefetch(tf.data.AUTOTUNE)
-    return dataset
-
-
-def get_images_path(dir_path: str) -> list[str]:
-    """
-    Get, from the given path, all the images in the given directory.
-    Parameters
-    ----------
-    dir_path : Path of the directory.
-
-    Returns
-    -------
-    All images in the given directory (as a list of path).
-    """
-    images = []
-
-    if not os.path.isdir(dir_path):
-        raise Exception(">>> Error: Invalid path")
-
-    for subdir in os.listdir(dir_path):
-        subdir_path = os.path.join(dir_path, subdir)
-        for filename in os.listdir(subdir_path):
-            image_path = os.path.join(subdir_path, filename)
-            images.append(image_path)
-
-    return images
-
-
-def get_labels(images_path: list[str]) -> dict[str, int]:
-    """
-    Get all unique labels from given path. We consider as label all directories that contain images.
-    Parameters
-    ----------
-    images_path : list of paths.
-
-    Returns
-    -------
-    A dictionary with unique str labels as keys and integer labels as values.
-    """
-    labels = list(set([p.split("/")[-2] for p in images_path]))
-    labels_dict = {d: i for d, i in zip(labels, range(len(labels)))}
-    return labels_dict
-
-
-def labelise_images(images_path: list[str], labels_dict: dict[str, int]) -> dict[str, list]:
-    """
-    Associate all path with its corresponding label.
-    Parameters
-    ----------
-    images_path : List of path.
-    labels_dict : Dict of labels.
-
-    Returns
-    -------
-    Dictionary of labeled paths.
-    """
-    return {img_path: [labels_dict[img_path.split("/")[-2]]] for img_path in images_path}
-
-
-def sample_labelised_images(
-    labeled_images: dict[str, list], ratio: float = 0.8
-) -> tuple[dict[str, list], dict[str, list]]:
-    """
-    Split the given labeled images into two dict  one for the testing process and the other for the training process.
-    Parameters
-    ----------
-    labeled_images : Dictionary to split.
-    ratio : (float between 0 and 1) The ratio of training and testing images.
-
-    Returns
-    -------
-    A tuple with the training images and the testing images.
-    """
-    sample_keys = rnd.sample(list(labeled_images.keys()), int(len(labeled_images) * ratio))
-
-    first_sample = {k: labeled_images[k] for k in sample_keys}
-    second_sample = {k: labeled_images[k] for k in labeled_images.keys() if k not in sample_keys}
-
-    return first_sample, second_sample
-
-
-def build_datasets(
-    dir_path: str, batch_ratio: int = 1
-) -> tuple[tf.data.Dataset, tf.data.Dataset, dict[str, int]]:
-    """
-    Prepare the dataset for training and testing process.
-    Parameters
-    ----------
-    dir_path : Path of the directory.
-    batch_ratio : Size of the batch (can be used to reduce the dataset size).
-
-    Returns
-    -------
-
-    """
-    img_list = get_images_path(dir_path)
-    labels = get_labels(img_list)
-    labeled_images = labelise_images(img_list, labels)
-
-    train_sample, test_sample = sample_labelised_images(labeled_images, ratio=0.8)
-
-    train_image_paths = list(train_sample.keys())
-    train_labels = [label[0] for label in train_sample.values()]
-
-    test_image_paths = list(test_sample.keys())
-    test_labels = [label[0] for label in test_sample.values()]
-
-    train_dataset = create_dataset(
-        train_image_paths, train_labels, batch_ratio=batch_ratio, shuffle=True
-    )
-    test_dataset = create_dataset(
-        test_image_paths, test_labels, batch_ratio=batch_ratio, shuffle=False
-    )
-
-    return train_dataset, test_dataset, labels
-
-
-def load_model(input_size: int, output_size: int) -> tf.keras.Model:
-    """
-    Build and compile the CNN model.
+    Build and compile the CNN model from tensorflow tutorial.
     Parameters
     ----------
     input_size : Length of input image side.
@@ -183,26 +24,29 @@ def load_model(input_size: int, output_size: int) -> tf.keras.Model:
     """
     model = tf.keras.models.Sequential(
         [
+            # Extract features layers.
             tf.keras.layers.Input(shape=(input_size, input_size, 3)),
-            tf.keras.layers.Conv2D(32, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D((2, 2)),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D((2, 2)),
             tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
             tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
-            tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+            tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D((2, 2)),
+            tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
+            tf.keras.layers.MaxPooling2D((2, 2)),
+            # Hidden layer (learn).
             tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(64, activation="relu"),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(512, activation="relu"),
+            # Use soft max to extract the highest result (the predicted label).
             tf.keras.layers.Dense(output_size, activation="softmax"),
         ]
     )
     model.compile(
+        # Function used to optimise weights during the training session.
         optimizer="adam",
+        # Function used to evaluate the result.
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=["accuracy"],
     )
@@ -210,7 +54,7 @@ def load_model(input_size: int, output_size: int) -> tf.keras.Model:
     return model
 
 
-def train_model(
+def _train_model(
     model: tf.keras.Model,
     train_dataset: tf.data.Dataset,
     test_dataset: tf.data.Dataset,
@@ -228,21 +72,24 @@ def train_model(
     -------
     A tuple with the model and the training history.
     """
+    # Small callback function used to stop the training process when the validation loss is lower
+    # than the previous one three times in a row. If this function stops the training it restores
+    # the weights (from the third back).
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=3, restore_best_weights=True
     )
 
+    # Train the model.
     hist = model.fit(
         train_dataset,
         epochs=epoch,
         validation_data=test_dataset,
         callbacks=[early_stopping],
-        batch_size=64,
     )
     return model, hist
 
 
-def plot_training(hist) -> None:
+def _plot_training(hist) -> None:
     """
     Plot the accuracy curve.
     Parameters
@@ -262,6 +109,44 @@ def plot_training(hist) -> None:
     plt.show()
 
 
+def _save(
+    model: tf.keras.models.Sequential,
+    dataset_path: str,
+    save_dir: str,
+    save_model: bool,
+    zip: bool,
+):
+    """
+    Save the trained model and the datasets if the user wants it.
+    Parameters
+    ----------
+    model : trained model.
+    dataset_path : Path of the dataset.
+    save_dir : Path to save.
+    save_model : If the user wants to save the model.
+    zip : zip the dataset and the model into a file call ARCHIVE.zip..
+
+    Returns
+    -------
+
+    """
+    model_dir = None
+    if save_model:
+        model_dir = os.path.join(save_dir, "model")
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+        model.save(model_dir + "/model.keras")
+        model.save_weights(model_dir + "/model.weights.h5")
+        with open(model_dir + "/labels.json", "w", encoding="utf-8") as file:
+            json.dump(labels, file)
+
+    if zip:
+        sources = [dataset_path]
+        if model_dir is not None:
+            sources.append(model_dir)
+        zip_directories("ARCHIVE.zip", sources)
+
+
 def options_parser() -> argparse.ArgumentParser:
     """
     Use to handle program parameters and options.
@@ -272,7 +157,8 @@ def options_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="Distribution",
-        description="This program should be used to see the distribution of plant types and states.",
+        description="This program should be used to see the distribution of plant types and "
+        + "states.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
     parser.add_argument("directory_path", type=str, nargs=1)
@@ -289,42 +175,66 @@ def options_parser() -> argparse.ArgumentParser:
         help="number of epochs to train the model.",
     )
     parser.add_argument(
-        "--batch_ratio",
+        "--batch_size",
         type=float,
-        default=1,
-        help="Used to reduce the dataset size.",
+        default=32,
+        help="Used to specify how many images to process in a batch.",
     )
+    parser.add_argument(
+        "--validation_ratio",
+        type=float,
+        default=0.2,
+        help="Used to specify the ratio of data used for validation.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=123456,
+        help="Used to reproduce a dataset split.",
+    )
+
     parser.add_argument("-p", "--plot", action="store_true", help="show the training history")
-    parser.add_argument("-s", "--save_model", action="store_true", help="save the trained model")
+    parser.add_argument("--save_model", action="store_true", help="save the trained model")
+    parser.add_argument(
+        "--zip",
+        action="store_true",
+        help="zip the dataset and the model into a file call ARCHIVE.zip.",
+    )
     return parser
 
 
 if __name__ == "__main__":
     try:
-        tf.keras.backend.clear_session()
+        init_tf_env()
 
         args = options_parser().parse_args()
 
-        train_dataset, test_dataset, labels = build_datasets(
-            args.directory_path[0], batch_ratio=args.batch_ratio
+        train_dataset, evaluate_dataset = build_dataset(
+            data_path=args.directory_path[0],
+            batch_size=args.batch_size,
+            validation_ratio=args.validation_ratio,
+            seed=args.seed,
         )
 
-        model = load_model(256, len(labels))
+        labels = train_dataset.class_names
+        print("Class Names:", labels)
 
-        model, history = train_model(model, train_dataset, test_dataset, epoch=args.epochs)
+        model = _load_model(256, len(labels))
+
+        model, history = _train_model(model, train_dataset, evaluate_dataset, epoch=args.epochs)
 
         if args.plot:
-            plot_training(history)
+            _plot_training(history)
 
-        test_loss, test_acc = model.evaluate(test_dataset)
-        print("Test accuracy:", test_acc)
-
-        if args.save_model:
-            model.save(args.save_dir + "/model.keras")
-            model.save_weights(args.save_dir + "/model.weights.h5")
-            with open(args.save_dir + "/labels.json", "w", encoding="utf-8") as file:
-                json.dump(labels, file)
+        _save(
+            model=model,
+            dataset_path=args.directory_path[0],
+            save_dir=args.save_dir,
+            save_model=args.save_model,
+            zip=args.zip,
+        )
 
     except Exception as e:
         print(">>> Oups something went wrong.", file=sys.stderr)
         print(e, file=sys.stderr)
+        raise ValueError("Error") from e

@@ -5,30 +5,28 @@ import sys
 import matplotlib.pyplot as plt
 
 
-def distribution(dir_path: str, plant: str | None = None) -> None:
+def distribution(dir_path: str) -> dict:
     """
-    Plot for each type of plant, in the given directory, the distribution of diseases.
+    Get the distribution of images in each subdirectory.
     Parameters
     ----------
     dir_path : Path to the directory to analyse.
-    plant : Optional parameter used to plot graphs for only a specific plant.
 
     Returns
     -------
-
+    dict : each subdirectory name and its total number of images.
     """
     if not dir_path or not os.path.isdir(dir_path):
         raise Exception(f">>> Error {dir_path} is not a directory.")
-    if plant is not None and len(plant) == 0:
-        raise Exception(f">>> Error {plant} is empty.")
 
     subfolders = _get_subfolders(dir_path)
+
     if not subfolders:
         raise Exception(f">>> Error {dir_path} is empty.")
 
     subfolders_sizes = _get_subfolders_sizes(subfolders)
-    plant_types = _get_plant_types(subfolders, plant)
-    _plot_plant_types(subfolders_sizes, plant_types)
+
+    return subfolders_sizes
 
 
 def _get_subfolders(dir_path: str) -> list:
@@ -68,62 +66,41 @@ def _get_subfolders_sizes(subfolders: list) -> dict:
     return subfolders_sizes
 
 
-def _get_plant_types(subfolders: list, plant: str | None = None) -> list:
+def _plot_plant_types(subfolders_sizes: dict) -> None:
     """
-    Get the list of each unique type of plant
+    Plot the distribution of plant diseases.
     Parameters
     ----------
-    subfolders : list of all subfolders.
-    plant : Optional parameter used to plot graphs for only a specific plant.
+    subfolders_sizes : A dictionary of subfolder and sizes.
 
     Returns
     -------
-    A list of all plant types.
+
     """
-    return (
-        list(set([k.split("/")[-1].split("_")[0] for k in subfolders]))
-        if plant is None
-        else [plant]
+    _folders_size = subfolders_sizes
+    if len(_folders_size) == 0:
+        raise Exception(">>> Error no subfolders.")
+
+    color_map = plt.cm.tab10
+    colors = [color_map(i / (len(_folders_size) - 1)) for i in range(len(_folders_size))]
+
+    _fig, _axes = plt.subplots(1, 2, figsize=(10, 5), constrained_layout=True)
+    _fig.canvas.manager.set_window_title("Distribution")
+
+    _axes[0].pie(
+        _folders_size.values(),
+        labels=list(_folders_size.keys()),
+        autopct="%1.0f%%",
+        colors=colors,
     )
-
-
-def _plot_plant_types(subfolders_sizes: dict, plant_types: list) -> None:
-    """
-    Plot for each type of plant its distribution.
-    Parameters
-    ----------
-    subfolders_sizes : A dictionary of subfolder sizes.
-    plant_types : A list of plant types.
-
-    Returns
-    -------
-
-    """
-    for plant_type in plant_types:
-        _folders_size = {k: v for k, v in subfolders_sizes.items() if k.startswith(plant_type)}
-        if len(_folders_size) == 0:
-            raise Exception(f">>> Error {plant_type} is empty.")
-
-        color_map = plt.cm.tab10
-        colors = [color_map(i / (len(_folders_size) - 1)) for i in range(len(_folders_size))]
-
-        _fig, _axes = plt.subplots(1, 2, figsize=(10, 5), constrained_layout=True)
-        _fig.canvas.manager.set_window_title(f"{plant_type}")
-
-        _axes[0].pie(
-            _folders_size.values(),
-            labels=list(_folders_size.keys()),
-            autopct="%1.0f%%",
-            colors=colors,
-        )
-        _axes[1].bar(
-            list(_folders_size.keys()),
-            _folders_size.values(),
-            align="center",
-            color=colors,
-        )
-        plt.xticks(rotation=45)
-        plt.show()
+    _axes[1].bar(
+        list(_folders_size.keys()),
+        _folders_size.values(),
+        align="center",
+        color=colors,
+    )
+    plt.xticks(rotation=45)
+    plt.show()
 
 
 def options_parser() -> argparse.ArgumentParser:
@@ -136,13 +113,11 @@ def options_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="Distribution",
-        description="This program should be used to see the distribution of plant types and states.",
+        description="This program should be used to see the distribution of plant types and"
+        + " states.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
     parser.add_argument("directory_path", type=str, nargs=1)
-    parser.add_argument(
-        "--plant_type", type=str, default=None, help="Plot only the selected plant type."
-    )
     return parser
 
 
@@ -150,7 +125,8 @@ if __name__ == "__main__":
     try:
         args = options_parser().parse_args()
 
-        distribution(dir_path=args.directory_path[0], plant=args.plant_type)
+        distribution_dict = distribution(dir_path=args.directory_path[0])
+        _plot_plant_types(distribution_dict)
     except Exception as e:
         print(">>> Oups something went wrong.", file=sys.stderr)
         print(e, file=sys.stderr)

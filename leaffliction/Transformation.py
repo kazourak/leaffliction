@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import multiprocessing
+import os
 import pathlib
 import sys
 
@@ -335,7 +336,7 @@ def process_image(args: tuple):
     # Save the images
     for i in range(len(transformations) - 1):
         cv2.imwrite(
-            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i+1]}{file.suffix}",
+            f"{destination}/{file.stem}_{TRANSFORMATIONS_NAMES[i + 1]}{file.suffix}",
             transformations[i],
         )
 
@@ -350,7 +351,8 @@ def process_image(args: tuple):
 
 def transform_all(source: str, destination: str):
     """
-    Transform all images in the source directory and save them in the destination directory using multiprocessing.
+    Transform all images in the source directory and save them in the destination directory
+    using multiprocessing.
 
     Parameters
     ----------
@@ -410,6 +412,30 @@ def transform_one(image_path: str):
     plot_all_images(transformations)
 
 
+def get_mask(image_path: str) -> np.ndarray:
+    """
+    Return the masked image.
+    Parameters
+    ----------
+    image_path : Leaf to processed.
+
+    Returns
+    -------
+    The processed image as a np.ndarray.
+    """
+    img = cv2.imread(image_path)
+
+    if img is None:
+        raise ValueError("The provided image path is invalid.")
+
+    img_lab = pcv.rgb2gray_lab(img, channel="b")
+    img_binary = pcv.threshold.otsu(gray_img=img_lab, object_type="light")
+    img_filled = pcv.fill_holes(img_binary)
+    img_blur = pcv.median_blur(img_filled, ksize=5)
+
+    return pcv.apply_mask(img=img, mask=img_blur, mask_color="white")
+
+
 def options_parser() -> argparse.ArgumentParser:
     """
     Create command-line options for the script.
@@ -424,10 +450,19 @@ def options_parser() -> argparse.ArgumentParser:
         description="This program should be used to transform the image.",
         epilog="Please read the subject before proceeding to understand the input file format.",
     )
-    parser.add_argument("image_path", type=str, nargs="?", help="Image file path")
-    parser.add_argument("-src", "--source", type=str, nargs=1, help="Source directory path")
     parser.add_argument(
-        "-dst", "--destination", type=str, nargs=1, help="Destination directory path"
+        "source_path",
+        type=str,
+        nargs=1,
+        help="Image or directory path to  transform. If you give a directory please define the "
+        + "destination option.",
+    )
+    parser.add_argument(
+        "-dst",
+        "--destination",
+        type=str,
+        nargs=1,
+        help="Destination directory path (must be used only with a directory source).",
     )
     return parser
 
@@ -436,13 +471,15 @@ if __name__ == "__main__":
     try:
         args = options_parser().parse_args()
 
-        if args.source is not None and args.destination is not None:
-            transform_all(args.source[0], args.destination[0])
-        elif args.image_path is not None:
-            transform_one(args.image_path)
+        if os.path.isfile(args.source_path[0]) and args.destination is None:
+            transform_one(args.image_path[0])
+        elif os.path.isdir(args.source_path[0]) and args.destination is not None:
+            transform_all(args.source_path[0], args.destination)
         else:
             raise ValueError(
-                "Please, provide the image path or the source and destination directories."
+                "Bad usage: \n"
+                + "1 - Give a valid image path without the destination argument\n"
+                + "2 - Give a valid directory path with the destination option."
             )
 
     except Exception as e:
