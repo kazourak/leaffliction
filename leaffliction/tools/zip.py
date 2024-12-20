@@ -1,3 +1,12 @@
+"""
+Module: Zip
+
+This module provides functions to create zip archives of files and directories.
+It includes functionalities to zip single sources (directories or files) into a destination archive
+and to zip multiple directories into a single zip file. These utilities facilitate the packaging
+and compression of datasets for machine learning workflows.
+"""
+
 import os
 import zipfile
 
