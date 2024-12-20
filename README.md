@@ -238,3 +238,15 @@ Key Points
 - Depth: Deeper layers extract higher-level features.
 - Pooling and Dropout: Improve robustness and prevent overfitting.
 - Final Dense Layers: Map features to class probabilities.
+
+---
+
+# Sources and Documentations
+
+https://en.wikipedia.org/wiki/Convolutional_neural_network
+
+https://www.tensorflow.org/tutorials/keras/classification
+
+https://www.youtube.com/playlist?list=PLQY2H8rRoyvwWuPiWnuTDBHe7I0fMSsfO
+
+https://www.tensorflow.org/api_docs/python/tf/keras
