@@ -1,3 +1,11 @@
+"""
+Module: Evaluate
+
+This module provides functionalities to evaluate machine learning models.
+It includes functions to parse command-line options, initialize the TensorFlow environment,
+build datasets, and perform evaluations on trained models.
+"""
+
 import argparse
 import sys
 

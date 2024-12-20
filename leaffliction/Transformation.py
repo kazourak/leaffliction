@@ -1,3 +1,13 @@
+"""
+Module: Transformation
+
+This module provides functions for transforming images, including applying filters, 
+masking, selecting regions of interest (ROIs), performing analyses, detecting landmarks, 
+and generating histograms. It utilizes libraries such as OpenCV, plantcv, NumPy, and tqdm 
+to perform various image processing tasks essential for data augmentation in machine learning 
+workflows.
+"""
+
 import argparse
 import itertools
 import multiprocessing
