@@ -482,7 +482,7 @@ if __name__ == "__main__":
         args = options_parser().parse_args()
 
         if os.path.isfile(args.source_path[0]) and args.destination is None:
-            transform_one(args.image_path[0])
+            transform_one(args.source_path[0])
         elif os.path.isdir(args.source_path[0]) and args.destination is not None:
             transform_all(args.source_path[0], args.destination)
         else:
